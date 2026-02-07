@@ -1,52 +1,44 @@
-import { createClient } from '@/lib/supabase/server'
-import { notFound, redirect } from 'next/navigation'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { ChevronLeft } from 'lucide-react'
+import { requireRole } from '@/lib/auth/require-role'
+import { notFound } from 'next/navigation'
+import { DeleteEventForm } from '@/components/events/delete-event-form'
 
 export default async function EventLayout({
     children,
     params,
-  }: {
+}: {
     children: React.ReactNode
     params: Promise<{ id: string }>
-  }) {
+}) {
     // Await params before using its properties
     const { id } = await params
-    const supabase = await createClient()
+    const { supabase, user, role } = await requireRole(['organizer', 'admin'], { redirectTo: '/dashboard' })
 
-    const { data: event } = await supabase
+    let eventQuery = supabase
         .from('events')
-         .select('*')
-         .eq('id', id)
-         .single()
-    
+        .select('*')
+        .eq('id', id)
+
+    if (role !== 'admin') {
+        eventQuery = eventQuery.eq('organizer_id', user.id)
+    }
+
+    const { data: event } = await eventQuery.single()
+
     if (!event) notFound()
+
+    const canDelete = event.organizer_id === user.id
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center gap-4">
-                <Link href="/dashboard/events">
-                    <Button variant="ghost" size="icon">
-                        <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                </Link>
+            <div className="flex items-start justify-between gap-4">
                 <div>
-                     <h1 className="text-2xl font-bold tracking-tight">{event.title}</h1>
-                     <div className="flex text-sm text-muted-foreground gap-4">
+                    <h1 className="text-2xl font-bold tracking-tight">{event.title}</h1>
+                    <div className="flex text-sm text-muted-foreground gap-4">
                         <span>{new Date(event.start_date).toLocaleDateString()}</span>
                         <span className="capitalize">{event.event_type}</span>
-                     </div>
+                    </div>
                 </div>
-            </div>
-            
-            <div className="border-b flex gap-6 text-sm font-medium">
-                <Link href={`/dashboard/events/${id}`} className="pb-2 border-b-2 border-transparent hover:border-primary">Overview</Link>
-                {event.event_type === 'tournament' && (
-                     <Link href={`/dashboard/events/${id}/categories`} className="pb-2 border-b-2 border-transparent hover:border-primary">Categories</Link>
-                )}
-                <Link href={`/dashboard/events/${id}/entries`} className="pb-2 border-b-2 border-transparent hover:border-primary">Entries</Link>
-                <Link href={`/dashboard/events/${id}/approvals`} className="pb-2 border-b-2 border-transparent hover:border-primary">Approvals</Link>
+                {canDelete ? <DeleteEventForm eventId={event.id} /> : null}
             </div>
 
             {children}

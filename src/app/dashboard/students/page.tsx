@@ -1,24 +1,15 @@
-import { createClient } from '@/lib/supabase/server'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { requireRole } from '@/lib/auth/require-role'
 import { StudentDialog } from '@/components/students/student-dialog'
-import { StudentActions } from '@/components/students/student-actions'
 import { StudentBulkUpload } from '@/components/students/student-bulk-upload'
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Search } from 'lucide-react'
-import { redirect } from 'next/navigation'
-import Link from 'next/link'
 import { StudentDataTable } from '@/components/students/student-data-table'
+import { DashboardPageHeader } from '@/components/dashboard/page-header'
 
 export default async function StudentsPage({
-    searchParams,
-  }: {
-    searchParams: Promise<{ [key: string]: string | string[] | undefined }>
-  }) {
-  const supabase = await createClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+  const { supabase, user } = await requireRole('coach', { redirectTo: '/dashboard' })
 
   // URL Params
   const resolvedSearchParams = await searchParams
@@ -41,23 +32,21 @@ export default async function StudentsPage({
     .order('created_at', { ascending: false })
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-            <h1 className="text-3xl font-bold tracking-tight">Students</h1>
-            <p className="text-muted-foreground">Manage your athletes across all dojos.</p>
-        </div>
-        <div className="flex gap-2">
+    <div className="space-y-4">
+      <DashboardPageHeader
+        title="Students"
+        description="Manage your athletes across all dojos."
+        actions={
+          <>
             <StudentBulkUpload dojos={dojos || []} />
             <StudentDialog dojos={dojos || []} />
-        </div>
-      </div>
+          </>
+        }
+      />
 
-      <Card>
-        <CardContent className="p-6">
-            <StudentDataTable data={students || []} dojos={dojos || []} />
-        </CardContent>
-      </Card>
+      <div className="rounded-2xl border border-black/5 bg-gradient-to-b from-background/95 to-background/70 shadow-[0_12px_30px_-22px_rgba(0,0,0,0.25)] dark:border-white/10 dark:bg-background/40 dark:from-background/60 dark:to-background/30 dark:shadow-black/40">
+        <StudentDataTable data={students || []} dojos={dojos || []} />
+      </div>
     </div>
   )
 }

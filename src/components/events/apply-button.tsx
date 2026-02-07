@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import { applyToEvent } from "@/app/dashboard/events-browser/actions"
 import { useState } from "react"
 import { Loader2 } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 interface ApplyButtonProps {
     eventId: string
@@ -12,28 +13,37 @@ interface ApplyButtonProps {
 
 export function ApplyButton({ eventId, status }: ApplyButtonProps) {
     const [isLoading, setIsLoading] = useState(false)
+    const router = useRouter()
 
     const handleApply = async () => {
         setIsLoading(true)
         try {
-            await applyToEvent(eventId)
+            const result = await applyToEvent(eventId)
+            if (result?.success === false && result?.message) {
+                alert(result.message)
+                return
+            }
+
+            // Re-fetch the Server Component data (applications/status) immediately.
+            router.refresh()
         } catch (error) {
-            alert('Error applying to event')
+            const message = error instanceof Error ? error.message : 'Error applying to event'
+            alert(message)
         } finally {
             setIsLoading(false)
         }
     }
 
     if (status === 'approved') {
-        return <Button variant="secondary" disabled className="bg-green-100 text-green-800">Approved</Button>
+        return <Button variant="secondary" disabled className="bg-emerald-100 text-emerald-800">Approved</Button>
     }
 
     if (status === 'pending') {
-         return <Button variant="outline" disabled>Pending Approval</Button>
+        return <Button variant="outline" disabled>Pending Approval</Button>
     }
-    
+
     if (status === 'rejected') {
-          return <Button variant="destructive" disabled>Rejected</Button>
+        return <Button variant="destructive" disabled>Rejected</Button>
     }
 
     return (

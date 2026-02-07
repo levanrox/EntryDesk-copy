@@ -1,61 +1,66 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { requireRole } from '@/lib/auth/require-role'
+import { normalizeDobToIso } from '@/lib/date'
 
 export async function createStudent(formData: FormData) {
-  const supabase = await createClient()
+    const { supabase, user } = await requireRole('coach')
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+    const name = formData.get('name') as string
+    const gender = formData.get('gender') as string
+    const dojo_id = formData.get('dojo_id') as string // UUID
+    const rank = formData.get('rank') as string
+    const weight = formData.get('weight') ? Number(formData.get('weight')) : null
+    const dobRaw = formData.get('dob')
+    const dob = normalizeDobToIso(dobRaw)
 
-  const name = formData.get('name') as string
-  const gender = formData.get('gender') as string
-  const dojo_id = formData.get('dojo_id') as string // UUID
-  const rank = formData.get('rank') as string
-  const weight = formData.get('weight') ? Number(formData.get('weight')) : null
-  const dob = formData.get('dob') as string // YYYY-MM-DD
+    if (dobRaw && !dob) {
+        throw new Error('Invalid DOB. Use YYYY-MM-DD.')
+    }
 
-  // Security check: Ensure dojo belongs to coach
-  const { data: dojo } = await supabase.from('dojos').select('id').eq('id', dojo_id).eq('coach_id', user.id).single()
-  
-  if (!dojo) {
-      throw new Error('Invalid Dojo selected')
-  }
+    // Security check: Ensure dojo belongs to coach
+    const { data: dojo } = await supabase.from('dojos').select('id').eq('id', dojo_id).eq('coach_id', user.id).single()
 
-  const { error } = await supabase
-    .from('students')
-    .insert({
-      name,
-      gender,
-      dojo_id,
-      rank: rank || null,
-      weight,
-      date_of_birth: dob ? dob : null
-    })
+    if (!dojo) {
+        throw new Error('Invalid Dojo selected')
+    }
 
-  if (error) {
-    console.error('Create student error:', error)
-    throw new Error('Failed to create student')
-  }
+    const { error } = await supabase
+        .from('students')
+        .insert({
+            name,
+            gender,
+            dojo_id,
+            rank: rank || null,
+            weight,
+            date_of_birth: dob || null
+        })
 
-  revalidatePath('/dashboard/students')
-  revalidatePath('/dashboard/dojos')
-  return { success: true }
+    if (error) {
+        console.error('Create student error:', error)
+        throw new Error('Failed to create student')
+    }
+
+    revalidatePath('/dashboard/students')
+    revalidatePath('/dashboard/dojos')
+    return { success: true }
 }
 
 export async function updateStudent(studentId: string, formData: FormData) {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) redirect('/login')
+    const { supabase, user } = await requireRole('coach')
 
     const name = formData.get('name') as string
     const gender = formData.get('gender') as string
     // const dojo_id = formData.get('dojo_id') as string // Allowing dojo change? Yes.
     const rank = formData.get('rank') as string
     const weight = formData.get('weight') ? Number(formData.get('weight')) : null
-    const dob = formData.get('dob') as string
+    const dobRaw = formData.get('dob')
+    const dob = normalizeDobToIso(dobRaw)
+
+    if (dobRaw && !dob) {
+        throw new Error('Invalid DOB. Use YYYY-MM-DD.')
+    }
 
     // Note: We are not explicitly checking dojo ownership in the filter here because RLS policies handles "update if you have access".
     // But since RLS for students is "exists in dojo owned by coach", we are safe.
@@ -68,7 +73,7 @@ export async function updateStudent(studentId: string, formData: FormData) {
             gender,
             rank: rank || null,
             weight,
-            date_of_birth: dob ? dob : null
+            date_of_birth: dob || null
             // dojo_id update logic omitted for simplicity unless requested, to avoid moving student to unowned dojo accidentally
         })
         .eq('id', studentId)
@@ -97,9 +102,7 @@ export async function updateStudent(studentId: string, formData: FormData) {
 }
 
 export async function deleteStudent(studentId: string) {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) redirect('/login')
+    const { supabase, user } = await requireRole('coach')
 
     // RLS will ensure we can only delete students in our dojos
     const { error } = await supabase

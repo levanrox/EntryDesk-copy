@@ -1,18 +1,17 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { requireRole } from '@/lib/auth/require-role'
 
 export async function createDojo(formData: FormData) {
-  const supabase = await createClient()
+  const { supabase, user } = await requireRole('coach')
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    redirect('/login')
+  const nameValue = formData.get('name')
+  const name = typeof nameValue === 'string' ? nameValue.trim() : ''
+
+  if (!name) {
+    throw new Error('Dojo name is required')
   }
-
-  const name = formData.get('name') as string
 
   const { error } = await supabase
     .from('dojos')
@@ -22,7 +21,7 @@ export async function createDojo(formData: FormData) {
     })
 
   if (error) {
-    throw new Error('Failed to create dojo')
+    throw new Error(error.message)
   }
 
   revalidatePath('/dashboard/dojos')
@@ -30,12 +29,14 @@ export async function createDojo(formData: FormData) {
 }
 
 export async function updateDojo(dojoId: string, formData: FormData) {
-  const supabase = await createClient()
+  const { supabase, user } = await requireRole('coach')
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  const nameValue = formData.get('name')
+  const name = typeof nameValue === 'string' ? nameValue.trim() : ''
 
-  const name = formData.get('name') as string
+  if (!name) {
+    throw new Error('Dojo name is required')
+  }
 
   const { error } = await supabase
     .from('dojos')
@@ -44,7 +45,7 @@ export async function updateDojo(dojoId: string, formData: FormData) {
     .eq('coach_id', user.id) // Security check
 
   if (error) {
-     throw new Error('Failed to update dojo')
+    throw new Error(error.message)
   }
 
   revalidatePath('/dashboard/dojos')
@@ -52,21 +53,18 @@ export async function updateDojo(dojoId: string, formData: FormData) {
 }
 
 export async function deleteDojo(dojoId: string) {
-    const supabase = await createClient()
+  const { supabase, user } = await requireRole('coach')
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) redirect('/login')
+  const { error } = await supabase
+    .from('dojos')
+    .delete()
+    .eq('id', dojoId)
+    .eq('coach_id', user.id) // Security check
 
-    const { error } = await supabase
-        .from('dojos')
-        .delete()
-        .eq('id', dojoId)
-        .eq('coach_id', user.id) // Security check
-    
-    if (error) {
-        throw new Error('Failed to delete dojo')
-    }
+  if (error) {
+    throw new Error(error.message)
+  }
 
-    revalidatePath('/dashboard/dojos')
-    return { success: true }
+  revalidatePath('/dashboard/dojos')
+  return { success: true }
 }
