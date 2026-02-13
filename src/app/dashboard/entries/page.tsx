@@ -3,12 +3,21 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { Calendar, ArrowRight, CheckCircle2, MapPin, ClipboardList } from 'lucide-react'
 import { DashboardPageHeader } from '@/components/dashboard/page-header'
+import { PaginationControls } from '@/components/ui/pagination-controls'
 
-export default async function EntriesPage() {
+export default async function EntriesPage({
+    searchParams,
+}: {
+    searchParams?: Promise<{ page?: string }>
+}) {
     const { supabase, user } = await requireRole('coach', { redirectTo: '/dashboard' })
+    const sp = await searchParams
+    const page = Math.max(1, Number(sp?.page) || 1)
+    const limit = 50
+    const offset = (page - 1) * limit
 
     // Get Approved Events
-    const { data: applications } = await supabase
+    const { data: applications, count } = await supabase
         .from('event_applications')
         .select(`
         event_id, 
@@ -19,11 +28,13 @@ export default async function EntriesPage() {
             location, 
             description
         )
-    `)
+    `, { count: 'exact' })
         .eq('coach_id', user.id)
         .eq('status', 'approved')
+        .range(offset, offset + limit - 1)
 
     const approvedEvents = applications?.map(app => app.events) || []
+    const totalPages = Math.ceil((count ?? 0) / limit)
 
     return (
         <div className="space-y-4">
@@ -32,16 +43,16 @@ export default async function EntriesPage() {
                 description="Select an event to manage your team's participation."
             />
 
-            <div className="rounded-2xl border border-black/5 bg-gradient-to-b from-background/95 to-background/70 shadow-[0_12px_30px_-22px_rgba(0,0,0,0.25)] dark:border-white/10 dark:bg-background/40 dark:from-background/60 dark:to-background/30 dark:shadow-black/40">
+            <div className="dashboard-surface">
                 {/* @ts-ignore */}
                 {approvedEvents.length > 0 ? (
-                    <div className="divide-y divide-border">
+                    <div className="dashboard-list">
                         {/* @ts-ignore */}
                         {approvedEvents.map((event: any) => (
                             <Link
                                 key={event.id}
                                 href={`/dashboard/entries/${event.id}`}
-                                className="group flex items-center justify-between gap-4 p-3 transition-colors hover:bg-muted/50"
+                                className="dashboard-list-item group flex items-center justify-between gap-4 p-3"
                             >
                                 <div className="flex items-center gap-3 min-w-0">
                                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-950">
@@ -89,6 +100,8 @@ export default async function EntriesPage() {
                     </div>
                 )}
             </div>
+
+            <PaginationControls page={page} totalPages={totalPages} totalCount={count ?? 0} />
         </div>
     )
 }

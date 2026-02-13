@@ -12,7 +12,7 @@ export function SignOutForm() {
             method="post"
             onSubmit={() => beginNavigation({ title: 'Please wait while we log you out' })}
         >
-            <Button variant="outline" size="sm" className="w-full">
+            <Button variant="outline" size="sm" className="w-full border-border/50 dark:border-white/[0.12]">
                 Sign Out
             </Button>
         </form>

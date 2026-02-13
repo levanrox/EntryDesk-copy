@@ -16,7 +16,10 @@ export async function login(formData: FormData) {
   })
 
   if (error) {
-    return redirect('/login?error=Could not authenticate user')
+    if (/invalid login credentials/i.test(error.message)) {
+      return redirect('/login?error=invalid_credentials&tab=login')
+    }
+    return redirect('/login?error=auth_failed&tab=login')
   }
 
   revalidatePath('/', 'layout')
@@ -42,11 +45,11 @@ export async function signup(formData: FormData) {
   })
 
   if (error) {
-     return redirect('/login?error=Could not create user')
+      return redirect('/login?error=signup_failed&tab=register')
   }
 
   revalidatePath('/', 'layout')
-  redirect('/login?message=Check email to continue sign in process')
+    redirect('/login?message=check_email&tab=login')
 }
 
 export async function loginWithGoogle() {
@@ -63,6 +66,6 @@ export async function loginWithGoogle() {
     }
 
     if (error) {
-       return redirect('/login?error=Could not authenticate with Google')
+       return redirect('/login?error=google_auth_failed&tab=login')
     }
 }

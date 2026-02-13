@@ -277,3 +277,55 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .dashboard-shell .dashboard-nav-item {
+    will-change: transform;
+  }
+
+  .dashboard-shell .dashboard-surface {
+    border-radius: var(--radius-2xl);
+    border: 1px solid color-mix(in oklab, var(--color-border) 55%, transparent);
+    background: color-mix(in oklab, var(--color-background) 88%, var(--color-muted) 12%);
+    box-shadow: 0 14px 30px -24px rgb(0 0 0 / 0.35);
+    backdrop-filter: blur(8px);
+  }
+
+  .dark .dashboard-shell .dashboard-surface {
+    border-color: rgb(255 255 255 / 0.1);
+    background: rgb(255 255 255 / 0.03);
+    box-shadow: 0 14px 32px -24px rgb(0 0 0 / 0.55);
+  }
+
+  .dashboard-shell .dashboard-list>*+* {
+    border-top: 1px solid color-mix(in oklab, var(--color-border) 70%, transparent);
+  }
+
+  .dark .dashboard-shell .dashboard-list>*+* {
+    border-top-color: rgb(255 255 255 / 0.08);
+  }
+
+  .dashboard-shell .dashboard-list-item {
+    transition: background-color 140ms ease, transform 140ms ease;
+  }
+
+  .dashboard-shell .dashboard-list-item:hover {
+    background: color-mix(in oklab, var(--color-accent) 45%, transparent);
+  }
+
+  .dashboard-shell .dashboard-empty {
+    border-radius: var(--radius-2xl);
+    border: 1px dashed color-mix(in oklab, var(--color-border) 65%, transparent);
+    background: color-mix(in oklab, var(--color-muted) 25%, transparent);
+  }
+
+  .dark .dashboard-shell .dashboard-empty {
+    border-color: rgb(255 255 255 / 0.1);
+    background: rgb(255 255 255 / 0.02);
+  }
+
+  .dashboard-shell a:active,
+  .dashboard-shell button:active {
+    transform: scale(0.985);
+  }
+}

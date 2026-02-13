@@ -5,15 +5,25 @@ import { Button } from '@/components/ui/button'
 import { DashboardPageHeader } from '@/components/dashboard/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, MapPin, ArrowRight, FolderOpen, CheckCircle2, Clock, XCircle } from 'lucide-react'
+import { PaginationControls } from '@/components/ui/pagination-controls'
 
-export default async function EventBrowserPage() {
+export default async function EventBrowserPage({
+    searchParams,
+}: {
+    searchParams?: Promise<{ page?: string }>
+}) {
     const { supabase, user } = await requireRole('coach', { redirectTo: '/dashboard' })
+    const sp = await searchParams
+    const page = Math.max(1, Number(sp?.page) || 1)
+    const limit = 50
+    const offset = (page - 1) * limit
 
-    const { data: events } = await supabase
+    const { data: events, count } = await supabase
         .from('events')
-        .select('*')
+        .select('*', { count: 'exact' })
         .eq('is_public', true)
         .order('start_date', { ascending: true })
+        .range(offset, offset + limit - 1)
 
     const { data: applications } = await supabase
         .from('event_applications')
@@ -31,6 +41,7 @@ export default async function EventBrowserPage() {
 
     const approvedUpcomingEvents = upcomingEvents.filter((event) => appMap.get(event.id) === 'approved')
     const activeUpcomingEvents = upcomingEvents.filter((event) => appMap.get(event.id) !== 'approved')
+    const totalPages = Math.ceil((count ?? 0) / limit)
 
     const getStatusIcon = (status: string | undefined) => {
         if (status === 'approved') return <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-500" />
@@ -58,15 +69,15 @@ export default async function EventBrowserPage() {
                     <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
                     <h2 className="text-sm font-semibold">Approved Events</h2>
                 </div>
-                <div className="rounded-2xl border border-black/5 bg-gradient-to-b from-background/95 to-background/70 shadow-[0_12px_30px_-22px_rgba(0,0,0,0.25)] dark:border-white/10 dark:bg-background/40 dark:from-background/60 dark:to-background/30 dark:shadow-black/40">
+                <div className="dashboard-surface">
                     {approvedUpcomingEvents.length > 0 ? (
-                        <div className="divide-y divide-border">
+                        <div className="dashboard-list">
                             {approvedUpcomingEvents.map((event) => {
                                 const status = appMap.get(event.id)
                                 return (
                                     <div
                                         key={event.id}
-                                        className="flex items-center justify-between gap-4 p-3"
+                                        className="dashboard-list-item flex items-center justify-between gap-4 p-3"
                                     >
                                         <div className="flex items-center gap-3 min-w-0">
                                             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-950">
@@ -125,15 +136,15 @@ export default async function EventBrowserPage() {
                     <FolderOpen className="h-4 w-4 text-muted-foreground" />
                     <h2 className="text-sm font-semibold">Active Events</h2>
                 </div>
-                <div className="rounded-2xl border border-black/5 bg-gradient-to-b from-background/95 to-background/70 shadow-[0_12px_30px_-22px_rgba(0,0,0,0.25)] dark:border-white/10 dark:bg-background/40 dark:from-background/60 dark:to-background/30 dark:shadow-black/40">
+                <div className="dashboard-surface">
                     {activeUpcomingEvents.length > 0 ? (
-                        <div className="divide-y divide-border">
+                        <div className="dashboard-list">
                             {activeUpcomingEvents.map((event) => {
                                 const status = appMap.get(event.id)
                                 return (
                                     <div
                                         key={event.id}
-                                        className="flex items-center justify-between gap-4 p-3"
+                                        className="dashboard-list-item flex items-center justify-between gap-4 p-3"
                                     >
                                         <div className="flex items-center gap-3 min-w-0">
                                             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
@@ -191,9 +202,9 @@ export default async function EventBrowserPage() {
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <h2 className="text-sm font-semibold">Past Events</h2>
                 </div>
-                <div className="rounded-2xl border border-black/5 bg-gradient-to-b from-background/95 to-background/70 shadow-[0_12px_30px_-22px_rgba(0,0,0,0.25)] dark:border-white/10 dark:bg-background/40 dark:from-background/60 dark:to-background/30 dark:shadow-black/40">
+                <div className="dashboard-surface">
                     {pastEvents.length > 0 ? (
-                        <div className="divide-y divide-border">
+                        <div className="dashboard-list">
                             {pastEvents
                                 .slice()
                                 .sort((a, b) => (a.end_date < b.end_date ? 1 : -1))
@@ -202,7 +213,7 @@ export default async function EventBrowserPage() {
                                     return (
                                         <div
                                             key={event.id}
-                                            className="flex items-center justify-between gap-4 p-3"
+                                            className="dashboard-list-item flex items-center justify-between gap-4 p-3"
                                         >
                                             <div className="flex items-center gap-3 min-w-0">
                                                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
@@ -261,6 +272,8 @@ export default async function EventBrowserPage() {
                     )}
                 </div>
             </div>
+
+            <PaginationControls page={page} totalPages={totalPages} totalCount={count ?? 0} />
         </div>
     )
 }

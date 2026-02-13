@@ -569,6 +569,153 @@ This session focused on reducing dashboard clutter, making coach “event browsi
 
 ---
 
+# Session 10 — Hero/Auth Redesign + Dashboard UI Normalization + Branding Cleanup
+
+This session focused on aligning the product UI with the redesign references while keeping existing product behavior and data flows intact.
+
+## 1) Landing page redesign mismatch (hero looked disconnected from actual product)
+
+**Symptom**
+- Landing page visuals did not match the redesign reference.
+- Hero mock content did not reflect real coach/organizer workflows.
+- CTA wording needed `Login / Signup` instead of old sign-in wording.
+
+**Root cause**
+- Existing landing page used a prior visual pattern and generic hero previews.
+- Branding mark used placeholder text blocks (`ED`) instead of the actual favicon asset.
+
+**Fix**
+- Reworked landing navbar + hero content and CTA language.
+- Added a dedicated coach/organizer preview section that mirrors actual dashboard concepts.
+- Updated branding mark in landing header to use the favicon image (`/favicon.ico`) instead of text-based placeholder.
+
+**Where**
+- `src/app/page.tsx`
+- `src/components/app/landing-ui-preview.tsx`
+
+## 2) Login/Register UI needed to match hero language + clear auth feedback
+
+**Symptom**
+- Login/Register screen looked stylistically detached from the updated landing page.
+- Auth failures were generic and not user-friendly.
+
+**Root cause**
+- Login page and auth action redirects used broad error strings without stable message codes.
+
+**Fix**
+- Redesigned `login` + `register` tabs to match the same visual language as the hero.
+- Added structured auth status codes in server actions.
+- Added explicit inline messages for:
+  - invalid credentials,
+  - generic login failure,
+  - signup failure,
+  - Google auth launch failure,
+  - post-signup “check email” success guidance.
+- Replaced login header placeholder mark with favicon image (`/favicon.ico`).
+
+**Where**
+- `src/app/login/page.tsx`
+- `src/app/login/actions.ts`
+
+## 3) Dashboard pages felt visually inconsistent (harsh borders / uneven surfaces)
+
+**Symptom**
+- Cards, tables, and list containers across dashboard pages had inconsistent border/overlay intensity.
+- Interaction feedback varied by page and felt fragmented.
+
+**Root cause**
+- Several pages used page-local style combinations instead of shared dashboard surface/list primitives.
+
+**Fix**
+- Added shared dashboard component-layer classes for:
+  - shell-level surface containers,
+  - list separators,
+  - empty states,
+  - subtle active/press interactions.
+- Applied those shared styles across core dashboard pages.
+
+**Where**
+- `src/app/globals.css`
+- `src/app/dashboard/events/page.tsx`
+- `src/app/dashboard/entries/page.tsx`
+- `src/app/dashboard/approvals/page.tsx`
+- `src/app/dashboard/students/page.tsx`
+- `src/app/dashboard/dojos/page.tsx`
+- `src/app/dashboard/events-browser/page.tsx`
+- `src/app/dashboard/events/[id]/entries/page.tsx`
+
+## 4) List pages needed strict server-side pagination (50 rows/page)
+
+**Symptom**
+- Large datasets could over-render in list screens.
+- UX required strict page windows (e.g., 1–50, 51–100).
+
+**Root cause**
+- Some pages were still fully loading records or mixing server and client pagination patterns.
+
+**Fix**
+- Added uniform server-side pagination with page query param and `.range(...)` limits (`50`).
+- Updated shared pagination component to show row ranges (`start-end of total`).
+- Removed conflicting client-side row pagination from students table so server pagination remains authoritative.
+
+**Where**
+- `src/components/ui/pagination-controls.tsx`
+- `src/components/students/student-data-table.tsx`
+- `src/app/dashboard/students/page.tsx`
+- `src/app/dashboard/dojos/page.tsx`
+- `src/app/dashboard/entries/page.tsx`
+- `src/app/dashboard/approvals/page.tsx`
+- `src/app/dashboard/events/page.tsx`
+- `src/app/dashboard/events-browser/page.tsx`
+- `src/app/dashboard/events/[id]/entries/page.tsx`
+
+## 5) Organizer home dashboard required actionable active-event visibility
+
+**Symptom**
+- Organizer home lacked a direct “your active events” section with full-row navigation.
+
+**Fix**
+- Added organizer-only `Your Active Events` block on dashboard home.
+- Queried organizer events with active date condition (`end_date >= today`).
+- Made each list row fully clickable to the event detail route.
+
+**Where**
+- `src/app/dashboard/page.tsx`
+
+## 6) Organizer quick-actions sizing mismatch (needed identical compact cards)
+
+**Symptom**
+- Quick action tiles looked oversized/uneven.
+
+**Fix**
+- Reduced quick-actions section spacing and tile paddings.
+- Locked both quick-action cards to the exact same compact dimensions and icon sizing.
+
+**Where**
+- `src/app/dashboard/page.tsx`
+
+## 7) Branding mark cleanup: replace placeholder logos with favicon image
+
+**Symptom**
+- UI still showed placeholder logo marks (`ED` blocks / icon substitutes) in multiple headers.
+
+**Fix**
+- Replaced placeholder logo marks with the favicon image (`/favicon.ico`) in primary brand touchpoints.
+- Removed now-unneeded decorative icon imports used only for placeholder brand marks.
+
+**Where**
+- `src/app/page.tsx`
+- `src/app/login/page.tsx`
+- `src/app/dashboard/layout.tsx`
+- `src/components/dashboard/mobile-nav.tsx`
+
+## Verification notes
+
+- Checked updated files for TypeScript/compile diagnostics after critical patches.
+- Confirmed no remaining `ED` or `Prize` placeholder branding strings in `src/**` UI code.
+
+---
+
 # Session 9 — Bulk Student Import UX + Data Normalization
 
 This session fixes a handful of issues discovered while using the dashboard in real workflows: the nav drawer sizing, dojo save failures, DOB import edge cases from Excel, and quality-of-life tools in the bulk student import review screen.

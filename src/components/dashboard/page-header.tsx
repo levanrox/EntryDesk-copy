@@ -10,7 +10,7 @@ export function DashboardPageHeader({
     actions?: React.ReactNode
 }) {
     return (
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b pb-4">
+        <div className="flex flex-col gap-2 border-b border-border/40 pb-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/[0.08]">
             <div>
                 <h1 className="text-lg font-semibold tracking-tight">{title}</h1>
                 {description ? <p className="text-xs text-muted-foreground">{description}</p> : null}

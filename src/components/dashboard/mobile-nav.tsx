@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
+import Image from 'next/image'
 import {
     Sheet,
     SheetContent,
@@ -16,7 +17,6 @@ import {
     Building2,
     Users,
     FileText,
-    Trophy,
 } from "lucide-react"
 import { DashboardNavLink } from "@/components/dashboard/nav-link"
 import { Badge } from "@/components/ui/badge"
@@ -49,12 +49,12 @@ export function MobileNav({ role, profile, userEmail }: MobileNavProps) {
             <SheetContent side="left" className="w-full max-w-full sm:w-[350px] sm:max-w-sm p-0">
                 <div className="flex h-[100dvh] flex-col">
                     <div className="flex items-center gap-3 p-6 border-b">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-emerald-600 shadow-lg shadow-primary/20 text-primary-foreground">
-                            <Trophy className="h-5 w-5" />
+                        <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-border/50 bg-background/70 dark:border-white/[0.12]">
+                            <Image src="/favicon.ico" alt="EntryDesk logo" fill className="object-cover" sizes="40px" priority />
                         </div>
                         <div className="leading-tight">
                             <div className="text-sm font-bold tracking-tight">EntryDesk</div>
-                            <div className="text-xs text-muted-foreground font-medium">Organiser</div>
+                            <div className="text-xs text-muted-foreground font-medium capitalize">{role === 'organizer' ? 'Organizer' : role}</div>
                         </div>
                     </div>
 

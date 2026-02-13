@@ -8,9 +8,11 @@ import { useAppNavigation } from '@/components/app/navigation-provider'
 interface PaginationControlsProps {
   page: number
   totalPages: number
+  totalCount?: number
+  pageSize?: number
 }
 
-export function PaginationControls({ page, totalPages }: PaginationControlsProps) {
+export function PaginationControls({ page, totalPages, totalCount, pageSize = 50 }: PaginationControlsProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { beginNavigation } = useAppNavigation()
@@ -24,6 +26,9 @@ export function PaginationControls({ page, totalPages }: PaginationControlsProps
 
   if (totalPages <= 1) return null
 
+  const start = (page - 1) * pageSize + 1
+  const end = totalCount ? Math.min(page * pageSize, totalCount) : page * pageSize
+
   return (
     <div className="flex items-center justify-end space-x-2 py-4">
       <Button
@@ -36,7 +41,7 @@ export function PaginationControls({ page, totalPages }: PaginationControlsProps
         Previous
       </Button>
       <div className="text-sm font-medium">
-        Page {page} of {totalPages}
+        {totalCount ? `${start}-${end} of ${totalCount}` : `Page ${page} of ${totalPages}`}
       </div>
       <Button
         variant="outline"

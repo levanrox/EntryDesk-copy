@@ -129,7 +129,7 @@ export default async function EventEntriesPage({
                 </CardContent>
             </Card>
 
-            <PaginationControls page={page} totalPages={totalPages} />
+            <PaginationControls page={page} totalPages={totalPages} totalCount={count ?? 0} />
         </div>
     )
 }

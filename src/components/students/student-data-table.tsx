@@ -5,7 +5,6 @@ import {
     ColumnDef,
     flexRender,
     getCoreRowModel,
-    getPaginationRowModel,
     getSortedRowModel,
     getFilteredRowModel,
     useReactTable,
@@ -31,7 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { StudentActions } from './student-actions'
-import { Search, SlidersHorizontal, ChevronDown, ArrowUpDown } from 'lucide-react'
+import { Search, ChevronDown, ArrowUpDown } from 'lucide-react'
 import Fuse from 'fuse.js'
 import { normalizeDobToIso } from '@/lib/date'
 
@@ -145,7 +144,6 @@ export function StudentDataTable({ data, dojos }: StudentDataTableProps) {
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
         getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         onColumnVisibilityChange: setColumnVisibility,
@@ -166,7 +164,7 @@ export function StudentDataTable({ data, dojos }: StudentDataTableProps) {
     return (
         <div className="w-full space-y-4">
             {/* Search and Filters Toolbar */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 py-4">
+            <div className="flex flex-col items-start justify-between gap-4 py-2 sm:flex-row sm:items-center">
                 {/* Search */}
                 <div className="relative w-full sm:w-72">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -174,14 +172,14 @@ export function StudentDataTable({ data, dojos }: StudentDataTableProps) {
                         placeholder="Search students (fuzzy)..."
                         value={globalFilter}
                         onChange={(event) => setGlobalFilter(event.target.value)}
-                        className="pl-8"
+                        className="h-11 rounded-full pl-8"
                     />
                 </div>
 
                 {/* Filters Row */}
                 <div className="flex flex-wrap items-center gap-2">
                     <Select onValueChange={(val) => setFilter("dojo", val)}>
-                        <SelectTrigger className="w-[140px]">
+                        <SelectTrigger className="h-11 w-[140px] rounded-full">
                             <SelectValue placeholder="All Dojos" />
                         </SelectTrigger>
                         <SelectContent>
@@ -193,7 +191,7 @@ export function StudentDataTable({ data, dojos }: StudentDataTableProps) {
                     </Select>
 
                     <Select onValueChange={(val) => setFilter("gender", val)}>
-                        <SelectTrigger className="w-[110px]">
+                        <SelectTrigger className="h-11 w-[110px] rounded-full">
                             <SelectValue placeholder="Gender" />
                         </SelectTrigger>
                         <SelectContent>
@@ -205,7 +203,7 @@ export function StudentDataTable({ data, dojos }: StudentDataTableProps) {
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" className="ml-auto">
+                            <Button variant="outline" className="ml-auto h-11 rounded-full">
                                 Columns <ChevronDown className="ml-2 h-4 w-4" />
                             </Button>
                         </DropdownMenuTrigger>
@@ -233,7 +231,7 @@ export function StudentDataTable({ data, dojos }: StudentDataTableProps) {
             </div>
 
             {/* Table */}
-            <div className="rounded-md border">
+            <div className="overflow-hidden rounded-2xl border border-border/50 bg-background/20 dark:border-white/[0.10] dark:bg-white/[0.02]">
                 <Table>
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -284,29 +282,8 @@ export function StudentDataTable({ data, dojos }: StudentDataTableProps) {
                 </Table>
             </div>
 
-            {/* Pagination */}
-            <div className="flex items-center justify-end space-x-2 py-4">
-                <div className="flex-1 text-sm text-muted-foreground">
-                    {table.getFilteredRowModel().rows.length} row(s)
-                </div>
-                <div className="space-x-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
-                    >
-                        Previous
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
-                    >
-                        Next
-                    </Button>
-                </div>
+            <div className="py-1 text-sm text-muted-foreground">
+                Showing {table.getFilteredRowModel().rows.length} row(s) on this page.
             </div>
         </div>
     )

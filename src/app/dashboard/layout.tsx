@@ -1,21 +1,19 @@
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { getUserProfile } from '@/lib/auth/require-role'
 import { DashboardNavLink } from '@/components/dashboard/nav-link'
 import { SignOutForm } from '@/components/dashboard/signout-form'
 import { Badge } from '@/components/ui/badge'
 import { DashboardBackGate } from '@/components/dashboard/dashboard-back-gate'
 import { ThemeSwitch } from '@/components/app/theme-toggle'
 import { MobileNav } from '@/components/dashboard/mobile-nav'
+import Link from 'next/link'
+import Image from 'next/image'
 import {
   LayoutDashboard,
   Calendar,
   CheckCircle2,
   Building2,
   Users,
-  FileText,
-  Search,
-  Settings,
-  Trophy
+  FileText
 } from 'lucide-react'
 
 export default async function DashboardLayout({
@@ -23,31 +21,14 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return redirect('/login')
-  }
-
-  // Fetch Profile to get role
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role, full_name')
-    .eq('id', user.id)
-    .single()
+  const { user, profile, role } = await getUserProfile()
 
   // If no profile exists (e.g. first login), we should probably guide them to setup
   // For now, let's assume profile is created on signup trigger or similar
-
-  const role = profile?.role || 'coach'
   const roleLabel = role === 'organizer' ? 'Organizer' : role === 'admin' ? 'Admin' : 'Coach'
 
   return (
-    <div className="min-h-screen w-full relative">
+    <div className="dashboard-shell min-h-screen w-full relative">
       {/* Background Decor */}
       <div className="fixed inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]">
         <div className="absolute left-0 bottom-0 -z-10 h-[300px] w-[300px] rounded-full bg-primary/5 blur-[100px]" />
@@ -58,17 +39,17 @@ export default async function DashboardLayout({
         <aside className="hidden w-72 flex-col border-r bg-background/50 backdrop-blur-xl px-4 py-5 md:flex sticky top-0 h-screen">
           <DashboardBackGate />
           <div className="flex items-center justify-between gap-3 mb-6">
-            <DashboardNavLink href="/dashboard" className="px-2 py-1 w-full hover:bg-transparent">
+            <Link href="/dashboard" className="w-full rounded-xl px-2 py-1 transition-colors hover:bg-accent/30">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-emerald-600 shadow-lg shadow-primary/20 text-primary-foreground">
-                  <Trophy className="h-5 w-5" />
+                <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-border/50 bg-background/70 dark:border-white/[0.12]">
+                  <Image src="/favicon.ico" alt="EntryDesk logo" fill className="object-cover" sizes="40px" priority />
                 </div>
                 <div className="leading-tight">
                   <div className="text-sm font-bold tracking-tight">EntryDesk</div>
                   <div className="text-xs text-muted-foreground font-medium">{roleLabel}</div>
                 </div>
               </div>
-            </DashboardNavLink>
+            </Link>
           </div>
 
           <div className="flex flex-1 flex-col gap-1">
@@ -158,14 +139,14 @@ export default async function DashboardLayout({
             <div className="flex h-14 items-center justify-between px-4">
               <div className="flex items-center gap-2">
                 <MobileNav role={role} profile={profile} userEmail={user.email || ''} />
-                <DashboardNavLink href="/dashboard" className="px-0 py-0">
+                <Link href="/dashboard" className="rounded-md transition-colors hover:bg-accent/30 px-1 py-0.5">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20">
-                      <span className="text-xs font-bold">ED</span>
+                    <div className="relative h-8 w-8 overflow-hidden rounded-md border border-border/50 bg-background/70 dark:border-white/[0.12]">
+                      <Image src="/favicon.ico" alt="EntryDesk logo" fill className="object-cover" sizes="32px" priority />
                     </div>
                     <span className="text-sm font-bold tracking-tight">EntryDesk</span>
                   </div>
-                </DashboardNavLink>
+                </Link>
               </div>
               <div className="flex items-center gap-2">
                 <ThemeSwitch className="scale-[0.85]" />
