@@ -107,7 +107,7 @@ export default async function LandingPage() {
                                     <h3 className="text-xl font-semibold leading-tight">{event.title}</h3>
                                     <Badge className="border-0 bg-muted/30 text-foreground dark:bg-white/[0.08]">
                                         {event.event_type
-                                            ? event.event_type.replace(/[_-]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
+                                            ? event.event_type.replace(/[_-]+/g, ' ').replace(/\b\w/g, (char: string) => char.toUpperCase())
                                             : 'Tournament'}
                                     </Badge>
                                 </div>
