@@ -14,6 +14,17 @@ type ApprovedEvent = {
     description?: string | null
 }
 
+function isApprovedEvent(value: unknown): value is ApprovedEvent {
+    if (!value || typeof value !== 'object') return false
+    const event = value as Record<string, unknown>
+    return (
+        typeof event.id === 'string' &&
+        typeof event.title === 'string' &&
+        typeof event.start_date === 'string' &&
+        typeof event.end_date === 'string'
+    )
+}
+
 export default async function EntriesPage({
     searchParams,
 }: {
@@ -43,7 +54,12 @@ export default async function EntriesPage({
         .eq('status', 'approved')
         .range(offset, offset + limit - 1)
 
-    const approvedEvents = (applications?.map(app => app.events).filter(Boolean) || []) as ApprovedEvent[]
+    const approvedEvents: ApprovedEvent[] = (applications ?? [])
+        .flatMap((application) => {
+            const eventsValue = application.events as unknown
+            return Array.isArray(eventsValue) ? eventsValue : eventsValue ? [eventsValue] : []
+        })
+        .filter(isApprovedEvent)
     const todayIso = new Date().toISOString().slice(0, 10)
     const activeEvents = approvedEvents.filter((event) => event.end_date >= todayIso)
     const pastEvents = approvedEvents.filter((event) => event.end_date < todayIso)

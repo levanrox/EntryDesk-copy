@@ -58,6 +58,8 @@ This doc captures the main issues encountered while setting up/running the app l
 - **11th session:** Documented safe Supabase rollout path for existing projects, including duplicate pre-check/cleanup SQL before applying the unique index.
 
 - **12th session:** Hardened organizer event deletion UX with a 3-dot actions menu + destructive modal + typed confirmation (`delete`) to reduce accidental data loss.
+- **13th session:** Completed image-only optimization pass (Next image formats/sizes/cache + responsive hero `sizes`) without introducing unrelated UX changes.
+- **14th session:** Fixed Vercel production TypeScript build failure in dashboard entries by replacing an unsafe relation cast with normalized flattening + strict type guard filtering.
 
 ## 1) Supabase migration error: `must be owner of table users`
 
@@ -1645,6 +1647,40 @@ This session focused on the public-facing experience (especially for logged-out 
 
 ---
 
+## 14) Vercel production build error on dashboard entries page
+
+### Symptom
+- Vercel build failed during `next build` / TypeScript check with:
+  - `TS2352: Conversion of type ... to type 'ApprovedEvent[]' may be a mistake...`
+- Failure location:
+  - `src/app/dashboard/entries/page.tsx` (around approved events mapping)
+
+### Root cause
+- Code assumed joined Supabase relation data from `event_applications.events` could be directly cast as `ApprovedEvent[]`.
+- In practice, relation payload shape can be `object | object[] | null` depending on select shape/inference.
+- The direct cast (`as ApprovedEvent[]`) bypassed safe narrowing and failed strict production type checks.
+
+### Fix
+- Removed unsafe direct cast.
+- Added a runtime-safe normalization path:
+  - flatten relation values whether single object or array
+  - filter with explicit type guard `isApprovedEvent(...)`
+- Result: `approvedEvents` is now constructed as truly narrowed `ApprovedEvent[]`.
+
+### Why this is correct
+- Handles real-world relation shape variance safely.
+- Satisfies strict TypeScript checks without weakening types.
+- Prevents runtime surprises from malformed/null relation values.
+
+### Files
+- `src/app/dashboard/entries/page.tsx`
+
+### Verification
+- VS Code diagnostics now report no errors for `src/app/dashboard/entries/page.tsx`.
+- This addresses the exact Vercel compile-time blocker shown in deployment logs.
+
+---
+
 ## Final status for this session
 
 - Public landing now supports full event discovery without forced login.
@@ -1654,3 +1690,4 @@ This session focused on the public-facing experience (especially for logged-out 
 - Footer includes contribution/contact enhancements and blended background image.
 - Dashboard desktop + mobile both provide 3-bar navigation toggles.
 - Next image pipeline is configured for better mobile delivery.
+- Vercel TypeScript build blocker on coach entries is resolved with safe relation normalization.

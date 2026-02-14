@@ -25,7 +25,7 @@ export default async function LandingPage() {
         <div className="min-h-screen bg-background">
             <LandingHeader isLoggedIn={!!user} />
 
-            <section className="relative min-h-[88vh] overflow-hidden px-6 pb-20 pt-32">
+            <section className="relative min-h-[88vh] overflow-hidden px-6 pb-20 pt-32 md:flex md:min-h-[92vh] md:items-center md:px-8 md:pb-24 md:pt-24 lg:min-h-screen lg:px-10 lg:pt-32 xl:px-12">
                 <Image
                     src="/Hero image.png"
                     alt="Karate athletes training"
@@ -38,13 +38,13 @@ export default async function LandingPage() {
                 <div className="absolute inset-0 bg-gradient-to-b from-sky-950/22 via-transparent to-background/38" />
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_35%,rgba(2,6,23,0.30)_100%)]" />
 
-                <div className="relative z-10 mx-auto max-w-4xl pt-12 text-center">
-                    <h1 className="text-6xl font-bold tracking-tight text-white md:text-7xl">
+                <div className="relative z-10 mx-auto max-w-4xl pt-12 text-center md:max-w-5xl md:pt-0 xl:max-w-6xl">
+                    <h1 className="text-6xl font-bold tracking-tight text-white md:text-7xl lg:text-8xl">
                         Event operations
                         <br />
                         without the chaos
                     </h1>
-                    <p className="mx-auto mt-6 max-w-2xl text-xl text-white/85">
+                    <p className="mx-auto mt-6 max-w-2xl text-xl text-white/85 md:max-w-3xl">
                         Submit entries. Review approvals. Export results.
                         <br className="hidden sm:block" />
                         Everything you need for event day.
@@ -76,7 +76,7 @@ export default async function LandingPage() {
 
             <LandingUiPreview />
 
-            <section className="mx-auto max-w-7xl px-6 pb-20 pt-4">
+            <section className="mx-auto max-w-7xl px-6 pb-20 pt-4 md:px-8 xl:max-w-[95vw] xl:px-8">
                 <PublicEventsSection events={events ?? null} todayIso={todayIso} />
             </section>
         </div>
