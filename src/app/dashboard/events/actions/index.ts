@@ -2,18 +2,47 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/require-role'
-import { addDays, format } from 'date-fns'
+import { addDays, format, subMinutes } from 'date-fns'
 
 export async function createEvent(formData: FormData) {
   const { supabase, user } = await requireRole(['organizer', 'admin'])
 
-  const title = formData.get('title') as string
+  const title = (formData.get('title') as string)?.trim()
   const description = formData.get('description') as string
   const event_type = formData.get('event_type') as 'tournament' | 'seminar' | 'test'
-  const location = formData.get('location') as string
+  const location = (formData.get('location') as string)?.trim()
   const start_date = formData.get('start_date') as string // YYYY-MM-DD
   const end_date = formData.get('end_date') as string // YYYY-MM-DD
   const is_public = formData.get('is_public') === 'on'
+
+  const dedupeWindowStart = subMinutes(new Date(), 2).toISOString()
+  let duplicateQuery = supabase
+    .from('events')
+    .select('id')
+    .eq('organizer_id', user.id)
+    .eq('title', title)
+    .eq('event_type', event_type)
+    .eq('start_date', start_date)
+    .eq('end_date', end_date)
+    .gte('created_at', dedupeWindowStart)
+    .order('created_at', { ascending: false })
+    .limit(1)
+
+  duplicateQuery = location
+    ? duplicateQuery.eq('location', location)
+    : duplicateQuery.is('location', null)
+
+  const { data: duplicateEvent, error: duplicateError } = await duplicateQuery.maybeSingle()
+
+  if (duplicateError) {
+    console.error(duplicateError)
+    throw new Error('Failed to create event')
+  }
+
+  if (duplicateEvent) {
+    revalidatePath('/dashboard/events')
+    return { success: true, eventId: duplicateEvent.id, duplicatePrevented: true }
+  }
 
   // Insert Event
   const { data: event, error } = await supabase
@@ -32,6 +61,37 @@ export async function createEvent(formData: FormData) {
     .single()
 
   if (error) {
+    // Unique constraint can still race under concurrent requests; treat as duplicate.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pgCode = (error as any)?.code
+    if (pgCode === '23505') {
+      let existingEventQuery = supabase
+        .from('events')
+        .select('id')
+        .eq('organizer_id', user.id)
+        .eq('title', title)
+        .eq('event_type', event_type)
+        .eq('start_date', start_date)
+        .eq('end_date', end_date)
+        .order('created_at', { ascending: false })
+        .limit(1)
+
+      existingEventQuery = location
+        ? existingEventQuery.eq('location', location)
+        : existingEventQuery.is('location', null)
+
+      const { data: existingEvent, error: existingEventError } = await existingEventQuery.maybeSingle()
+      if (existingEventError) {
+        console.error(existingEventError)
+        throw new Error('Failed to create event')
+      }
+
+      if (existingEvent) {
+        revalidatePath('/dashboard/events')
+        return { success: true, eventId: existingEvent.id, duplicatePrevented: true }
+      }
+    }
+
     console.error(error)
     throw new Error('Failed to create event')
   }

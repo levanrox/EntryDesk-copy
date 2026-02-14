@@ -51,6 +51,12 @@ This doc captures the main issues encountered while setting up/running the app l
 - **9th session:** Fixed DOB imported as numbers (Excel serials) via DOB normalization at parse, save, and render.
 - **9th session:** Bulk upload review UX: added dojo selection in review step, cancel import, and row checkboxes + “Delete selected”.
 
+- **10th session:** Dashboard UI polish pass — softened harsh borders, unified card/list hover surfaces to match Home style, and improved visual consistency for coach + organizer event pages.
+- **10th session:** Updated organizer event demographics block: Female shown first, F/M color-coded (pink/blue), with per-gender participation bars based on total entries.
+
+- **11th session:** Prevented accidental duplicate event creation end-to-end with layered protection: frontend submit lock, backend dedupe guard, and DB unique index migration.
+- **11th session:** Documented safe Supabase rollout path for existing projects, including duplicate pre-check/cleanup SQL before applying the unique index.
+
 ## 1) Supabase migration error: `must be owner of table users`
 
 **Symptom**
@@ -1110,3 +1116,206 @@ This session adds automatic “Past Events” grouping once an event date has pa
 **Where**
 - `src/app/dashboard/layout.tsx`
 - `src/components/dashboard/mobile-nav.tsx`
+
+---
+
+# Session 10 — UI Surface Polish + Demographics Visualization (Today)
+
+This session focused on visual quality and consistency across organizer and coach event flows. The goal was to remove harsh/contrasty outlines, align hover/surface treatment with the Home cards, and improve readability of demographic metrics.
+
+## 1) Harsh borders on cards/tables looked noisy
+
+**Symptom**
+- Card and table surfaces had high-contrast white-ish borders that felt sharp and distracting.
+- Across pages, border weight/contrast was inconsistent.
+
+**Root cause**
+- Mixed border/shadow treatments accumulated across components over multiple iterations.
+- Some list/table wrappers used stronger contrast than card surfaces.
+
+**Fix**
+- Softened border contrast and normalized container styling to subtle separators.
+- Preserved borders (did not remove them entirely), but matched the softer Home-card treatment.
+
+**Why this is correct**
+- Maintains structure and separation while reducing visual noise.
+- Keeps readability and hierarchy without “hard-line” artifacts.
+
+## 2) Hover/surface behavior was inconsistent vs Home cards
+
+**Symptom**
+- Home cards had the preferred “smooth” hover/surface behavior, but coach/organizer event surfaces did not match.
+
+**Fix**
+- Applied Home card-style hover and surface treatment to:
+  - coach event → My Entries card/list areas
+  - organizer events list + manage-event related surfaces
+  - student list/table blocks that were still using harsher styling
+
+**Why this is correct**
+- Users get one predictable visual language across dashboard modules.
+- Reduces context switching cost and makes screens feel part of one system.
+
+## 3) Organizer demographics block needed clearer information density
+
+**Request / Symptom**
+- Show Female first.
+- Color F pink and M blue.
+- Add bars that represent each gender’s entries as a proportion of total entries.
+
+**Fix**
+- Reordered demographic display to Female first, Male second.
+- Applied pink styling for female and blue styling for male values.
+- Added proportional bars using:
+  - Female bar width = $\frac{femaleCount}{totalEntries} \times 100$
+  - Male bar width = $\frac{maleCount}{totalEntries} \times 100$
+
+**Why this is correct**
+- Preserves exact counts while adding immediate visual ratio comprehension.
+- Color + order + bars together improve scanability for organizers.
+
+**Where (major touched areas)**
+- `src/components/coach/coach-entries-list.tsx`
+- `src/components/coach/coach-overview.tsx`
+- `src/components/coach/coach-student-register.tsx`
+- `src/app/dashboard/events/page.tsx`
+- `src/app/dashboard/events/[id]/page.tsx`
+- `src/app/globals.css`
+
+---
+
+# Session 11 — Duplicate Event Prevention (Frontend + Backend + Migration)
+
+This session addresses accidental double-creation when users tap/click “Create Event” twice quickly. The fix is intentionally layered so each tier protects the next one.
+
+## Problem statement
+
+**Symptom**
+- A rapid double tap on “Create Event” created two event rows.
+
+**Why this can happen**
+- UI can dispatch two submits before disabled/loading state is fully observed.
+- Even with frontend guard, concurrent requests can still race at backend/database level.
+
+## Architecture of the fix (defense in depth)
+
+1) **Frontend guard**: prevent duplicate submit from the same dialog interaction.
+2) **Backend guard**: detect recent same-payload create attempts and reuse existing event.
+3) **Database guard**: unique index guarantees duplicates cannot persist under race conditions.
+
+This three-layer model ensures reliability even when one layer is bypassed.
+
+## 1) Frontend: immediate submit lock on Create Event dialog
+
+**What changed**
+- In the create dialog submit handler, an in-memory lock (`useRef`) is checked before processing.
+- If already submitting, handler exits early.
+- Lock is set before awaiting server action and always released in `finally`.
+- Submit button remains disabled while `isSubmitting` is true.
+
+**Why**
+- Prevents accidental double-click/double-tap from issuing multiple create actions.
+- `useRef` lock is synchronous and protects the tiny timing window around state updates.
+
+**Where**
+- `src/components/events/create-event-dialog.tsx`
+
+## 2) Backend: dedupe check before insert + race-safe fallback
+
+**What changed**
+- Before insert, server action checks for a very recent existing event (same organizer + key fields) and returns that event if found.
+- On insert error, if Postgres returns unique violation (`23505`), server fetches matching existing event and returns success with existing ID.
+
+**Key match fields used for dedupe**
+- `organizer_id`
+- `title` (trimmed in action)
+- `event_type`
+- `start_date`
+- `end_date`
+- `location` (trimmed, null-safe handling)
+
+**Why**
+- Eliminates duplicate creation from near-simultaneous requests.
+- Prevents user-facing failure in race scenarios by converting race collisions into idempotent success.
+
+**Where**
+- `src/app/dashboard/events/actions/index.ts`
+
+## 3) Database migration: hard uniqueness guarantee
+
+**What changed**
+- Added unique index migration to enforce one logical event per organizer+payload.
+
+**Migration file**
+- `supabase/migrations/20260214_prevent_duplicate_events.sql`
+
+**SQL used**
+```sql
+-- Prevent accidental duplicate event creation for the same organizer.
+-- Treats case and NULL/empty location consistently.
+CREATE UNIQUE INDEX IF NOT EXISTS events_dedupe_unique_idx ON events (
+    organizer_id,
+    lower(title),
+    event_type,
+    start_date,
+    end_date,
+    lower(coalesce(location, ''))
+);
+```
+
+**Why this shape**
+- `lower(title)` avoids duplicates differing only by text case.
+- `lower(coalesce(location, ''))` treats `NULL` and empty location consistently.
+- `IF NOT EXISTS` makes migration re-runnable safely.
+
+## 4) How to apply this migration to an existing Supabase project
+
+This repository’s standard setup flow uses Supabase SQL Editor.
+
+### Step A — Pre-check duplicates (recommended)
+
+```sql
+select organizer_id, lower(title), event_type, start_date, end_date, lower(coalesce(location,'')), count(*)
+from events
+group by 1,2,3,4,5,6
+having count(*) > 1;
+```
+
+If no rows return, proceed to Step B.
+
+### Step B — Run migration SQL
+
+Run contents of `supabase/migrations/20260214_prevent_duplicate_events.sql` in Supabase SQL Editor.
+
+### Step C — Verify index exists
+
+```sql
+select indexname
+from pg_indexes
+where tablename = 'events'
+  and indexname = 'events_dedupe_unique_idx';
+```
+
+### Step D — If Step B fails due to existing duplicates
+
+Clean duplicates (keep newest per logical event), then rerun Step B:
+
+```sql
+delete from events e
+using (
+  select id from (
+    select id, row_number() over (
+      partition by organizer_id, lower(title), event_type, start_date, end_date, lower(coalesce(location,''))
+      order by created_at desc, id desc
+    ) as rn
+    from events
+  ) t where rn > 1
+) d
+where e.id = d.id;
+```
+
+## 5) Net result
+
+- Double-tap on Create Event no longer creates duplicate rows.
+- Concurrency races are handled gracefully.
+- Database enforces final correctness even if client/server race paths occur.
