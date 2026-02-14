@@ -42,21 +42,21 @@ export function EntryFilters({ coaches, eventDays }: EntryFiltersProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center py-4">
+    <div className="flex flex-col gap-3 rounded-2xl border border-white/[0.05] bg-muted/20 p-3 sm:p-4 md:flex-row md:items-center">
       <div className="flex-1">
         <Input
           placeholder="Search student name..."
           onChange={(e) => handleSearch(e.target.value)}
           defaultValue={searchParams.get('q')?.toString()}
-          className="max-w-sm"
+          className="h-11 max-w-sm rounded-full"
         />
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Select
           defaultValue={searchParams.get('status')?.toString() || 'all'}
           onValueChange={(val) => handleFilter('status', val)}
         >
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="h-11 w-[150px] rounded-full">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -72,7 +72,7 @@ export function EntryFilters({ coaches, eventDays }: EntryFiltersProps) {
           defaultValue={searchParams.get('day')?.toString() || 'all'}
           onValueChange={(val) => handleFilter('day', val)}
         >
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="h-11 w-[150px] rounded-full">
             <SelectValue placeholder="All Days" />
           </SelectTrigger>
           <SelectContent>
@@ -87,7 +87,7 @@ export function EntryFilters({ coaches, eventDays }: EntryFiltersProps) {
           defaultValue={searchParams.get('coach')?.toString() || 'all'}
           onValueChange={(val) => handleFilter('coach', val)}
         >
-          <SelectTrigger className="w-[160px]">
+          <SelectTrigger className="h-11 w-[180px] rounded-full">
             <SelectValue placeholder="All Coaches" />
           </SelectTrigger>
           <SelectContent>

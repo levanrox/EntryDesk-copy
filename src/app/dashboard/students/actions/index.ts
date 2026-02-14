@@ -118,3 +118,25 @@ export async function deleteStudent(studentId: string) {
     revalidatePath('/dashboard/dojos')
     return { success: true }
 }
+
+export async function updateStudentGenericChecked(studentId: string, checked: boolean, eventId?: string) {
+    const { supabase } = await requireRole('coach')
+
+    const { error } = await supabase
+        .from('students')
+        .update({ generic_checked: checked })
+        .eq('id', studentId)
+
+    if (error) {
+        console.error('Failed to update generic checkbox:', error)
+        throw new Error('Failed to save checkbox state')
+    }
+
+    revalidatePath('/dashboard/students')
+    revalidatePath('/dashboard/entries')
+    if (eventId) {
+        revalidatePath(`/dashboard/entries/${eventId}`)
+    }
+
+    return { success: true }
+}

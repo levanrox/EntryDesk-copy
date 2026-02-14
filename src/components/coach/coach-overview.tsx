@@ -30,7 +30,7 @@ function StatusPreview({
     const top = entries.slice(0, 4)
 
     return (
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden border border-black/10 bg-gradient-to-b from-background/90 to-background/50 transition-all hover:-translate-y-1 hover:bg-background/70 hover:shadow-lg hover:shadow-black/10 dark:border-white/10 dark:shadow-black/40">
             <CardHeader className="pb-2">
                 <div className="flex items-center justify-between gap-3">
                     <CardTitle className="text-sm font-medium">{title}</CardTitle>
@@ -84,7 +84,7 @@ export function CoachOverview({ stats, entries, onSelectStatus }: CoachOverviewP
         <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <button type="button" onClick={() => onSelectStatus('all')} className="text-left">
-                    <Card className="cursor-pointer transition-shadow hover:shadow-sm">
+                    <Card className="cursor-pointer border border-black/10 bg-gradient-to-b from-background/90 to-background/50 transition-all hover:-translate-y-1 hover:bg-background/70 hover:shadow-lg hover:shadow-black/10 dark:border-white/10 dark:shadow-black/40">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Active Entries</CardTitle>
                             <Users className="h-4 w-4 text-muted-foreground" />
@@ -97,7 +97,7 @@ export function CoachOverview({ stats, entries, onSelectStatus }: CoachOverviewP
                 </button>
 
                 <button type="button" onClick={() => onSelectStatus('draft')} className="text-left">
-                    <Card className="cursor-pointer transition-shadow hover:shadow-sm">
+                    <Card className="cursor-pointer border border-black/10 bg-gradient-to-b from-background/90 to-background/50 transition-all hover:-translate-y-1 hover:bg-background/70 hover:shadow-lg hover:shadow-black/10 dark:border-white/10 dark:shadow-black/40">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Drafts</CardTitle>
                             <FileEdit className="h-4 w-4 text-muted-foreground" />
@@ -110,7 +110,7 @@ export function CoachOverview({ stats, entries, onSelectStatus }: CoachOverviewP
                 </button>
 
                 <button type="button" onClick={() => onSelectStatus('submitted')} className="text-left">
-                    <Card className="cursor-pointer transition-shadow hover:shadow-sm">
+                    <Card className="cursor-pointer border border-black/10 bg-gradient-to-b from-background/90 to-background/50 transition-all hover:-translate-y-1 hover:bg-background/70 hover:shadow-lg hover:shadow-black/10 dark:border-white/10 dark:shadow-black/40">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Submitted</CardTitle>
                             <AlertCircle className="h-4 w-4 text-muted-foreground" />
@@ -123,7 +123,7 @@ export function CoachOverview({ stats, entries, onSelectStatus }: CoachOverviewP
                 </button>
 
                 <button type="button" onClick={() => onSelectStatus('approved')} className="text-left">
-                    <Card className="cursor-pointer transition-shadow hover:shadow-sm">
+                    <Card className="cursor-pointer border border-black/10 bg-gradient-to-b from-background/90 to-background/50 transition-all hover:-translate-y-1 hover:bg-background/70 hover:shadow-lg hover:shadow-black/10 dark:border-white/10 dark:shadow-black/40">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">Approved</CardTitle>
                             <CheckCircle className="h-4 w-4 text-muted-foreground" />

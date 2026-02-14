@@ -64,6 +64,8 @@ export default async function EventOverviewPage({ params }: { params: { id: stri
         male: entries?.filter(e => e.student_gender === 'male').length || 0,
         female: entries?.filter(e => e.student_gender === 'female').length || 0,
     }
+    const femalePct = totalEntries ? (genderStats.female / totalEntries) * 100 : 0
+    const malePct = totalEntries ? (genderStats.male / totalEntries) * 100 : 0
 
     // Top Dojos
     const dojoCounts: Record<string, number> = {}
@@ -83,7 +85,7 @@ export default async function EventOverviewPage({ params }: { params: { id: stri
             {/* Top-level Key Metrics */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
                 <Link href={`/dashboard/events/${id}/entries`} className="group block h-full focus:outline-none">
-                    <Card className="h-full cursor-pointer transition-shadow group-hover:shadow-sm">
+                    <Card className="h-full cursor-pointer border border-black/10 bg-gradient-to-b from-background/90 to-background/50 shadow-md shadow-black/5 transition-all group-hover:-translate-y-1 group-hover:bg-background/70 group-hover:shadow-lg group-hover:shadow-black/10 dark:border-white/10 dark:shadow-black/40">
                         <CardHeader className="flex min-h-[52px] flex-row items-start justify-between gap-2 space-y-0 pb-2">
                             <CardTitle className="min-w-0 whitespace-normal text-sm font-medium leading-snug">Total Entries</CardTitle>
                             <Users className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -96,20 +98,20 @@ export default async function EventOverviewPage({ params }: { params: { id: stri
                 </Link>
 
                 <Link href={`/dashboard/events/${id}/approvals?status=pending`} className="group block h-full focus:outline-none">
-                    <Card className="h-full cursor-pointer transition-shadow group-hover:shadow-sm">
+                    <Card className="h-full cursor-pointer border border-black/10 bg-gradient-to-b from-background/90 to-background/50 shadow-md shadow-black/5 transition-all group-hover:-translate-y-1 group-hover:bg-background/70 group-hover:shadow-lg group-hover:shadow-black/10 dark:border-white/10 dark:shadow-black/40">
                         <CardHeader className="flex min-h-[52px] flex-row items-start justify-between gap-2 space-y-0 pb-2">
                             <CardTitle className="min-w-0 whitespace-normal text-sm font-medium leading-snug">Pending Approvals</CardTitle>
                             <UserCheck className="h-4 w-4 shrink-0 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-yellow-600">{pendingApprovals || 0}</div>
+                            <div className="text-2xl font-bold text-amber-500">{pendingApprovals || 0}</div>
                             <p className="text-xs text-muted-foreground">Coach requests</p>
                         </CardContent>
                     </Card>
                 </Link>
 
                 <Link href={`/dashboard/events/${id}/approvals?status=approved`} className="group block h-full focus:outline-none">
-                    <Card className="h-full cursor-pointer transition-shadow group-hover:shadow-sm">
+                    <Card className="h-full cursor-pointer border border-black/10 bg-gradient-to-b from-background/90 to-background/50 shadow-md shadow-black/5 transition-all group-hover:-translate-y-1 group-hover:bg-background/70 group-hover:shadow-lg group-hover:shadow-black/10 dark:border-white/10 dark:shadow-black/40">
                         <CardHeader className="flex min-h-[52px] flex-row items-start justify-between gap-2 space-y-0 pb-2">
                             <CardTitle className="min-w-0 whitespace-normal text-sm font-medium leading-snug">Approved Coaches</CardTitle>
                             <Shield className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -122,7 +124,7 @@ export default async function EventOverviewPage({ params }: { params: { id: stri
                 </Link>
 
                 <Link href={`/dashboard/events/${id}/entries?status=approved`} className="group block h-full focus:outline-none">
-                    <Card className="h-full cursor-pointer transition-shadow group-hover:shadow-sm">
+                    <Card className="h-full cursor-pointer border border-black/10 bg-gradient-to-b from-background/90 to-background/50 shadow-md shadow-black/5 transition-all group-hover:-translate-y-1 group-hover:bg-background/70 group-hover:shadow-lg group-hover:shadow-black/10 dark:border-white/10 dark:shadow-black/40">
                         <CardHeader className="flex min-h-[52px] flex-row items-start justify-between gap-2 space-y-0 pb-2">
                             <CardTitle className="min-w-0 whitespace-normal text-sm font-medium leading-snug">Approved Entries</CardTitle>
                             <Medal className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -135,7 +137,7 @@ export default async function EventOverviewPage({ params }: { params: { id: stri
                 </Link>
 
                 <Link href={`/dashboard/events/${id}/entries?status=submitted`} className="group block h-full focus:outline-none">
-                    <Card className="h-full cursor-pointer transition-shadow group-hover:shadow-sm">
+                    <Card className="h-full cursor-pointer border border-black/10 bg-gradient-to-b from-background/90 to-background/50 shadow-md shadow-black/5 transition-all group-hover:-translate-y-1 group-hover:bg-background/70 group-hover:shadow-lg group-hover:shadow-black/10 dark:border-white/10 dark:shadow-black/40">
                         <CardHeader className="flex min-h-[52px] flex-row items-start justify-between gap-2 space-y-0 pb-2">
                             <CardTitle className="min-w-0 whitespace-normal text-sm font-medium leading-snug">Submitted</CardTitle>
                             <AlertCircle className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -148,7 +150,7 @@ export default async function EventOverviewPage({ params }: { params: { id: stri
                 </Link>
 
                 <Link href={`/dashboard/events/${id}/entries?status=rejected`} className="group block h-full focus:outline-none">
-                    <Card className="h-full cursor-pointer transition-shadow group-hover:shadow-sm">
+                    <Card className="h-full cursor-pointer border border-black/10 bg-gradient-to-b from-background/90 to-background/50 shadow-md shadow-black/5 transition-all group-hover:-translate-y-1 group-hover:bg-background/70 group-hover:shadow-lg group-hover:shadow-black/10 dark:border-white/10 dark:shadow-black/40">
                         <CardHeader className="flex min-h-[52px] flex-row items-start justify-between gap-2 space-y-0 pb-2">
                             <CardTitle className="min-w-0 whitespace-normal text-sm font-medium leading-snug">Rejected Entries</CardTitle>
                             <XCircle className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -163,7 +165,7 @@ export default async function EventOverviewPage({ params }: { params: { id: stri
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                 {/* Main Stats Area - Discipline & Gender */}
-                <Card className="col-span-4">
+                <Card className="col-span-4 border border-black/10 bg-gradient-to-b from-background/90 to-background/50 shadow-md shadow-black/5 transition-all hover:-translate-y-0.5 hover:bg-background/70 hover:shadow-lg hover:shadow-black/10 dark:border-white/10 dark:shadow-black/40">
                     <CardHeader>
                         <CardTitle>Overview</CardTitle>
                     </CardHeader>
@@ -179,8 +181,8 @@ export default async function EventOverviewPage({ params }: { params: { id: stri
                                             <span>Both</span>
                                             <span className="font-medium">{typeStats.both}</span>
                                         </div>
-                                        <div className="h-2 rounded-full bg-secondary overflow-hidden">
-                                            <div className="h-full bg-purple-500" style={{ width: `${totalEntries ? (typeStats.both / totalEntries) * 100 : 0}%` }} />
+                                        <div className="h-2 overflow-hidden rounded-full bg-secondary/70">
+                                            <div className="h-full bg-primary/80" style={{ width: `${totalEntries ? (typeStats.both / totalEntries) * 100 : 0}%` }} />
                                         </div>
                                     </div>
                                     <div className="space-y-1">
@@ -188,8 +190,8 @@ export default async function EventOverviewPage({ params }: { params: { id: stri
                                             <span>Kata</span>
                                             <span className="font-medium">{typeStats.kata}</span>
                                         </div>
-                                        <div className="h-2 rounded-full bg-secondary overflow-hidden">
-                                            <div className="h-full bg-blue-500" style={{ width: `${totalEntries ? (typeStats.kata / totalEntries) * 100 : 0}%` }} />
+                                        <div className="h-2 overflow-hidden rounded-full bg-secondary/70">
+                                            <div className="h-full bg-primary/70" style={{ width: `${totalEntries ? (typeStats.kata / totalEntries) * 100 : 0}%` }} />
                                         </div>
                                     </div>
                                     <div className="space-y-1">
@@ -197,8 +199,8 @@ export default async function EventOverviewPage({ params }: { params: { id: stri
                                             <span>Kumite</span>
                                             <span className="font-medium">{typeStats.kumite}</span>
                                         </div>
-                                        <div className="h-2 rounded-full bg-secondary overflow-hidden">
-                                            <div className="h-full bg-red-500" style={{ width: `${totalEntries ? (typeStats.kumite / totalEntries) * 100 : 0}%` }} />
+                                        <div className="h-2 overflow-hidden rounded-full bg-secondary/70">
+                                            <div className="h-full bg-primary/60" style={{ width: `${totalEntries ? (typeStats.kumite / totalEntries) * 100 : 0}%` }} />
                                         </div>
                                     </div>
                                 </div>
@@ -209,19 +211,30 @@ export default async function EventOverviewPage({ params }: { params: { id: stri
                                     <Users className="h-4 w-4" /> Demographics
                                 </h4>
                                 <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <div className="h-8 w-8 rounded bg-blue-100 flex items-center justify-center text-blue-700 font-bold">M</div>
-                                            <span className="text-sm">Male</span>
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex h-8 w-8 items-center justify-center rounded bg-pink-500/15 text-pink-500 font-bold">F</div>
+                                                <span className="text-sm">Female</span>
+                                            </div>
+                                            <span className="font-bold">{genderStats.female}</span>
                                         </div>
-                                        <span className="font-bold">{genderStats.male}</span>
+                                        <div className="h-2 overflow-hidden rounded-full bg-secondary/70">
+                                            <div className="h-full bg-pink-500" style={{ width: `${femalePct}%` }} />
+                                        </div>
                                     </div>
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <div className="h-8 w-8 rounded bg-pink-100 flex items-center justify-center text-pink-700 font-bold">F</div>
-                                            <span className="text-sm">Female</span>
+
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex h-8 w-8 items-center justify-center rounded bg-blue-500/15 text-blue-500 font-bold">M</div>
+                                                <span className="text-sm">Male</span>
+                                            </div>
+                                            <span className="font-bold">{genderStats.male}</span>
                                         </div>
-                                        <span className="font-bold">{genderStats.female}</span>
+                                        <div className="h-2 overflow-hidden rounded-full bg-secondary/70">
+                                            <div className="h-full bg-blue-500" style={{ width: `${malePct}%` }} />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -230,7 +243,7 @@ export default async function EventOverviewPage({ params }: { params: { id: stri
                 </Card>
 
                 {/* Top Dojos */}
-                <Card className="col-span-3">
+                <Card className="col-span-3 border border-black/10 bg-gradient-to-b from-background/90 to-background/50 shadow-md shadow-black/5 transition-all hover:-translate-y-0.5 hover:bg-background/70 hover:shadow-lg hover:shadow-black/10 dark:border-white/10 dark:shadow-black/40">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Building2 className="h-5 w-5" /> Top Dojos

@@ -38,6 +38,7 @@ create table students (
     date_of_birth date,
     weight numeric, -- in kg
     rank text, -- 'white', 'yellow', 'brown_3', etc.
+    generic_checked boolean not null default false,
     created_at timestamptz default now()
 );
 

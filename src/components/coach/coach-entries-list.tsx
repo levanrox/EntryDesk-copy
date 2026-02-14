@@ -140,17 +140,17 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset }: Co
                 onOpenChange={setDialogOpen}
             />
 
-            <div className="flex flex-col gap-4 md:flex-row md:items-center justify-between bg-muted/30 p-3 rounded-md border border-dashed">
+            <div className="flex flex-col gap-4 rounded-2xl border border-white/[0.05] bg-muted/20 p-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex flex-wrap gap-2 items-center flex-1">
                     <Filter className="h-4 w-4 text-muted-foreground mr-1" />
                     <Input
                         placeholder="Search student..."
-                        className="h-8 w-[150px] lg:w-[200px]"
+                        className="h-11 w-[190px] rounded-full lg:w-[260px]"
                         value={searchQuery}
                         onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
                     />
                     <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
-                        <SelectTrigger className="h-8 w-[130px]">
+                        <SelectTrigger className="h-11 w-[150px] rounded-full">
                             <SelectValue placeholder="Status" />
                         </SelectTrigger>
                         <SelectContent>
@@ -163,7 +163,7 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset }: Co
                     </Select>
                     {eventDays && eventDays.length > 0 && (
                         <Select value={dayFilter} onValueChange={(v) => { setDayFilter(v); setPage(1); }}>
-                            <SelectTrigger className="h-8 w-[150px]">
+                            <SelectTrigger className="h-11 w-[160px] rounded-full">
                                 <SelectValue placeholder="Filter Day" />
                             </SelectTrigger>
                             <SelectContent>
@@ -177,13 +177,13 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset }: Co
                 </div>
 
                 {selectedIds.size > 0 && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 rounded-full border border-white/[0.06] bg-background/50 px-2 py-1">
                         <span className="text-sm font-medium mr-2 hidden md:inline">{selectedIds.size} selected</span>
-                        <Button size="sm" onClick={handleSubmit} disabled={isSubmitting || isDeleting}>
+                        <Button size="sm" className="rounded-full" onClick={handleSubmit} disabled={isSubmitting || isDeleting}>
                             {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
                             Submit
                         </Button>
-                        <Button size="sm" variant="destructive" onClick={handleDelete} disabled={isSubmitting || isDeleting}>
+                        <Button size="sm" variant="destructive" className="rounded-full" onClick={handleDelete} disabled={isSubmitting || isDeleting}>
                             {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
                             Delete
                         </Button>
@@ -191,10 +191,10 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset }: Co
                 )}
             </div>
 
-            <div className="relative w-full overflow-auto border rounded-md min-h-[300px]">
+            <div className="relative w-full min-h-[300px] overflow-auto rounded-2xl border border-white/[0.06] bg-background/20 dark:bg-white/[0.02]">
                 <table className="w-full caption-bottom text-sm text-left">
-                    <thead className="[&_tr]:border-b bg-muted/40 sticky top-0 z-10 backdrop-blur-sm">
-                        <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                    <thead className="sticky top-0 z-10 bg-muted/35 backdrop-blur-sm [&_tr]:border-b">
+                        <tr className="border-b border-white/[0.06] transition-colors hover:bg-muted/45 data-[state=selected]:bg-muted">
                             <th className="h-12 px-4 align-middle w-[50px]">
                                 <Checkbox
                                     checked={isAllSelected}
@@ -225,7 +225,7 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset }: Co
                         ) : paginatedEntries.map((entry) => {
                             const missing = getMissingFields(entry.students)
                             return (
-                                <tr key={entry.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                                <tr key={entry.id} className="border-b border-white/[0.05] transition-colors hover:bg-muted/30 data-[state=selected]:bg-muted">
                                     <td className="p-4 align-middle">
                                         <Checkbox
                                             checked={selectedIds.has(entry.id)}
@@ -281,7 +281,7 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset }: Co
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-                <div className="flex items-center justify-between px-2">
+                <div className="flex items-center justify-between rounded-xl border border-white/[0.06] px-3 py-2">
                     <div className="text-sm text-muted-foreground">
                         Showing {startIndex + 1}-{Math.min(startIndex + ITEMS_PER_PAGE, filteredEntries.length)} of {filteredEntries.length}
                     </div>
@@ -289,6 +289,7 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset }: Co
                         <Button
                             variant="outline"
                             size="sm"
+                            className="rounded-full"
                             onClick={() => setPage(p => Math.max(1, p - 1))}
                             disabled={safePage === 1}
                         >
@@ -301,6 +302,7 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset }: Co
                         <Button
                             variant="outline"
                             size="sm"
+                            className="rounded-full"
                             onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                             disabled={safePage === totalPages}
                         >

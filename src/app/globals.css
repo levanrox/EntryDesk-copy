@@ -292,7 +292,7 @@ body {
   }
 
   .dark .dashboard-shell .dashboard-surface {
-    border-color: rgb(255 255 255 / 0.1);
+    border-color: rgb(255 255 255 / 0.05);
     background: rgb(255 255 255 / 0.03);
     box-shadow: 0 14px 32px -24px rgb(0 0 0 / 0.55);
   }
@@ -302,7 +302,7 @@ body {
   }
 
   .dark .dashboard-shell .dashboard-list>*+* {
-    border-top-color: rgb(255 255 255 / 0.08);
+    border-top-color: rgb(255 255 255 / 0.04);
   }
 
   .dashboard-shell .dashboard-list-item {

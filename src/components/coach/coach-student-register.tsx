@@ -15,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { StudentDialog } from "@/components/students/student-dialog"
 import { normalizeDobToIso } from "@/lib/date"
+import { updateStudentGenericChecked } from "@/app/dashboard/students/actions"
 
 interface CoachStudentRegisterProps {
     students: any[]
@@ -32,6 +33,13 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
     const [searchQuery, setSearchQuery] = useState('')
     const [editingStudent, setEditingStudent] = useState<any>(null)
     const [dialogOpen, setDialogOpen] = useState(false)
+    const [genericCheckedMap, setGenericCheckedMap] = useState<Record<string, boolean>>(() => {
+        const map: Record<string, boolean> = {}
+        for (const student of students) {
+            map[student.id] = !!student.generic_checked
+        }
+        return map
+    })
 
     // Filters
     const [filterDojo, setFilterDojo] = useState('all')
@@ -108,6 +116,18 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
         setDialogOpen(true)
     }
 
+    const handleToggleGeneric = async (studentId: string, checked: boolean) => {
+        const previous = genericCheckedMap[studentId] ?? false
+        setGenericCheckedMap((prev) => ({ ...prev, [studentId]: checked }))
+
+        try {
+            await updateStudentGenericChecked(studentId, checked, eventId)
+        } catch (error) {
+            setGenericCheckedMap((prev) => ({ ...prev, [studentId]: previous }))
+            alert('Failed to save checkbox state')
+        }
+    }
+
     return (
         <div className="space-y-4">
             <StudentDialog
@@ -118,18 +138,18 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
             />
 
             {/* Filters Bar */}
-            <div className="flex flex-wrap gap-2 items-center bg-muted/30 p-3 rounded-md border border-dashed">
+            <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/[0.10] bg-muted/20 p-3">
                 <Filter className="h-4 w-4 text-muted-foreground mr-1" />
 
                 <Input
                     placeholder="Search name..."
-                    className="h-8 w-[150px] lg:w-[200px]"
+                    className="h-11 w-[190px] rounded-full lg:w-[260px]"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
 
                 <Select value={filterGender} onValueChange={setFilterGender}>
-                    <SelectTrigger className="h-8 w-[110px]">
+                    <SelectTrigger className="h-11 w-[130px] rounded-full">
                         <SelectValue placeholder="Gender" />
                     </SelectTrigger>
                     <SelectContent>
@@ -140,7 +160,7 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
                 </Select>
 
                 <Select value={filterRank} onValueChange={setFilterRank}>
-                    <SelectTrigger className="h-8 w-[130px]">
+                    <SelectTrigger className="h-11 w-[150px] rounded-full">
                         <SelectValue placeholder="Rank" />
                     </SelectTrigger>
                     <SelectContent>
@@ -152,7 +172,7 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
                 </Select>
 
                 <Select value={filterDojo} onValueChange={setFilterDojo}>
-                    <SelectTrigger className="h-8 w-[140px]">
+                    <SelectTrigger className="h-11 w-[160px] rounded-full">
                         <SelectValue placeholder="Dojo" />
                     </SelectTrigger>
                     <SelectContent>
@@ -165,7 +185,7 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
             </div>
 
             {/* Action Bar */}
-            <div className="flex flex-col gap-4 md:flex-row md:items-center justify-between border-t border-b py-3 bg-muted/10">
+            <div className="flex flex-col justify-between gap-4 rounded-2xl border border-white/[0.10] bg-muted/10 px-3 py-3 md:flex-row md:items-center">
                 <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-muted-foreground">Selection:</span>
                     <span className="text-sm font-bold">{selectedIds.size}</span>
@@ -176,7 +196,7 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
                     {/* Event Day Selector (Conditional) */}
                     {eventDays.length > 0 && (
                         <Select value={selectedDayId} onValueChange={setSelectedDayId}>
-                            <SelectTrigger className="w-[180px] border-blue-200 bg-blue-50/50">
+                            <SelectTrigger className="w-[180px] rounded-full border-white/[0.12] bg-background/50">
                                 <SelectValue placeholder="Select Day (Required)" />
                             </SelectTrigger>
                             <SelectContent>
@@ -189,7 +209,7 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
                     )}
 
                     <Select value={participationType} onValueChange={setParticipationType}>
-                        <SelectTrigger className="w-[130px]">
+                        <SelectTrigger className="w-[140px] rounded-full">
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -199,17 +219,17 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
                         </SelectContent>
                     </Select>
 
-                    <Button size="sm" onClick={handleAdd} disabled={isAdding || selectedIds.size === 0} className="bg-emerald-600 hover:bg-emerald-700 min-w-[120px]">
+                    <Button size="sm" onClick={handleAdd} disabled={isAdding || selectedIds.size === 0} className="min-w-[120px] rounded-full bg-emerald-600 hover:bg-emerald-700">
                         {isAdding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <PlusCircle className="h-4 w-4 mr-2" />}
                         Add to Event
                     </Button>
                 </div>
             </div>
 
-            <div className="relative w-full overflow-auto border rounded-md h-[400px]">
+            <div className="relative h-[400px] w-full overflow-auto rounded-2xl border border-white/[0.10] bg-background/20 dark:bg-white/[0.02]">
                 <table className="w-full caption-bottom text-sm text-left">
-                    <thead className="[&_tr]:border-b bg-muted/40 sticky top-0 z-10 backdrop-blur-sm">
-                        <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                    <thead className="sticky top-0 z-10 bg-muted/35 backdrop-blur-sm [&_tr]:border-b">
+                        <tr className="border-b border-white/[0.12] transition-colors hover:bg-muted/45 data-[state=selected]:bg-muted">
                             <th className="h-12 px-4 align-middle w-[50px]">
                                 <Checkbox
                                     checked={isAllFilteredSelected}
@@ -225,18 +245,19 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
                             <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Name</th>
                             <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Dojo</th>
                             <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Rank</th>
+                            <th className="h-12 px-4 align-middle font-medium text-muted-foreground w-[90px]">Check</th>
                             <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Gender / Age</th>
                         </tr>
                     </thead>
                     <tbody className="[&_tr:last-child]:border-0">
                         {filteredStudents.length === 0 ? (
                             <tr>
-                                <td colSpan={5} className="h-24 text-center text-muted-foreground">
+                                <td colSpan={6} className="h-24 text-center text-muted-foreground">
                                     {availableStudents.length === 0 ? "All students are already entered!" : "No students match your search."}
                                 </td>
                             </tr>
                         ) : filteredStudents.map((student) => (
-                            <tr key={student.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                            <tr key={student.id} className="border-b border-white/[0.10] transition-colors hover:bg-muted/35 data-[state=selected]:bg-muted">
                                 <td className="p-4 align-middle">
                                     <Checkbox
                                         checked={selectedIds.has(student.id)}
@@ -258,6 +279,12 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
                                 </td>
                                 <td className="p-4 align-middle">{student.dojos?.name || '-'}</td>
                                 <td className="p-4 align-middle">{student.rank}</td>
+                                <td className="p-4 align-middle">
+                                    <Checkbox
+                                        checked={!!genericCheckedMap[student.id]}
+                                        onCheckedChange={(c) => handleToggleGeneric(student.id, !!c)}
+                                    />
+                                </td>
                                 <td className="p-4 align-middle text-muted-foreground capitalize">
                                     {student.gender}, {(() => {
                                         const iso = normalizeDobToIso(student.date_of_birth)
