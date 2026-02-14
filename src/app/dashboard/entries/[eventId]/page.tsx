@@ -58,6 +58,8 @@ export default async function EventEntriesPage({ params }: { params: { eventId: 
 
   // Compute Stats
   const validEntries = entries || []
+  const todayIso = new Date().toISOString().slice(0, 10)
+  const isPastEvent = event.end_date < todayIso
   const stats = {
     total: validEntries.length,
     draft: validEntries.filter(e => e.status === 'draft').length,
@@ -73,6 +75,7 @@ export default async function EventEntriesPage({ params }: { params: { eventId: 
       students={students || []}
       eventDays={eventDays || []}
       dojos={dojos || []}
+      isPastEvent={isPastEvent}
     />
   )
 }

@@ -20,9 +20,10 @@ interface CoachDashboardProps {
     students: any[]
     eventDays: any[]
     dojos: any[]
+    isPastEvent?: boolean
 }
 
-export function CoachDashboard({ event, stats, entries, students, eventDays, dojos }: CoachDashboardProps) {
+export function CoachDashboard({ event, stats, entries, students, eventDays, dojos, isPastEvent = false }: CoachDashboardProps) {
     const existingStudentIds = useMemo(() => new Set(entries.map(e => e.student_id)), [entries])
 
     const [statusPreset, setStatusPreset] = useState<string>('all')
@@ -40,10 +41,21 @@ export function CoachDashboard({ event, stats, entries, students, eventDays, doj
             <div className="space-y-3">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">{event.title}</h1>
-                        <p className="text-muted-foreground">Manage your team's participation.</p>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <h1 className="text-3xl font-bold tracking-tight">{event.title}</h1>
+                            {isPastEvent && (
+                                <span className="rounded-full border border-black/10 bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground dark:border-white/10">
+                                    Closed
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-muted-foreground">
+                            {isPastEvent
+                                ? "This event is closed. You can view entries and details, but registration/actions are disabled."
+                                : "Manage your team's participation."}
+                        </p>
                     </div>
-                    <Button onClick={() => setRegisterOpen(true)}>Register athletes</Button>
+                    {!isPastEvent && <Button onClick={() => setRegisterOpen(true)}>Register athletes</Button>}
                 </div>
             </div>
 
@@ -62,27 +74,35 @@ export function CoachDashboard({ event, stats, entries, students, eventDays, doj
                         <Button variant="outline" onClick={() => selectStatus('approved')}>Approved</Button>
                     </div>
                 </div>
-                <CoachEntriesList entries={entries} eventDays={eventDays} dojos={dojos} statusPreset={statusPreset} />
+                <CoachEntriesList
+                    entries={entries}
+                    eventDays={eventDays}
+                    dojos={dojos}
+                    statusPreset={statusPreset}
+                    isReadOnly={isPastEvent}
+                />
             </div>
 
-            <Dialog open={registerOpen} onOpenChange={setRegisterOpen}>
-                <DialogContent className="max-w-4xl">
-                    <DialogHeader>
-                        <DialogTitle>Register athletes</DialogTitle>
-                        <DialogDescription>
-                            Pick students from your roster and add them to this event.
-                        </DialogDescription>
-                    </DialogHeader>
+            {!isPastEvent && (
+                <Dialog open={registerOpen} onOpenChange={setRegisterOpen}>
+                    <DialogContent className="max-w-4xl">
+                        <DialogHeader>
+                            <DialogTitle>Register athletes</DialogTitle>
+                            <DialogDescription>
+                                Pick students from your roster and add them to this event.
+                            </DialogDescription>
+                        </DialogHeader>
 
-                    <CoachStudentRegister
-                        students={students}
-                        existingStudentIds={existingStudentIds}
-                        eventId={event.id}
-                        eventDays={eventDays}
-                        dojos={dojos}
-                    />
-                </DialogContent>
-            </Dialog>
+                        <CoachStudentRegister
+                            students={students}
+                            existingStudentIds={existingStudentIds}
+                            eventId={event.id}
+                            eventDays={eventDays}
+                            dojos={dojos}
+                        />
+                    </DialogContent>
+                </Dialog>
+            )}
         </div>
     )
 }

@@ -27,11 +27,12 @@ interface CoachEntriesListProps {
     eventDays: any[]
     dojos: any[]
     statusPreset?: string
+    isReadOnly?: boolean
 }
 
 const ITEMS_PER_PAGE = 50
 
-export function CoachEntriesList({ entries, eventDays, dojos, statusPreset }: CoachEntriesListProps) {
+export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isReadOnly = false }: CoachEntriesListProps) {
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
@@ -133,12 +134,14 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset }: Co
 
     return (
         <div className="space-y-4">
-            <StudentDialog
-                dojos={dojos}
-                student={editingStudent}
-                open={dialogOpen}
-                onOpenChange={setDialogOpen}
-            />
+            {!isReadOnly && (
+                <StudentDialog
+                    dojos={dojos}
+                    student={editingStudent}
+                    open={dialogOpen}
+                    onOpenChange={setDialogOpen}
+                />
+            )}
 
             <div className="flex flex-col gap-4 rounded-2xl border border-white/[0.05] bg-muted/20 p-4 md:flex-row md:items-center md:justify-between">
                 <div className="flex flex-wrap gap-2 items-center flex-1">
@@ -176,7 +179,7 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset }: Co
                     )}
                 </div>
 
-                {selectedIds.size > 0 && (
+                {!isReadOnly && selectedIds.size > 0 && (
                     <div className="flex items-center gap-2 rounded-full border border-white/[0.06] bg-background/50 px-2 py-1">
                         <span className="text-sm font-medium mr-2 hidden md:inline">{selectedIds.size} selected</span>
                         <Button size="sm" className="rounded-full" onClick={handleSubmit} disabled={isSubmitting || isDeleting}>
@@ -199,6 +202,7 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset }: Co
                                 <Checkbox
                                     checked={isAllSelected}
                                     onCheckedChange={(c) => handleSelectAll(!!c)}
+                                    disabled={isReadOnly}
                                     ref={input => {
                                         if (input) {
                                             // @ts-ignore
@@ -230,6 +234,7 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset }: Co
                                         <Checkbox
                                             checked={selectedIds.has(entry.id)}
                                             onCheckedChange={(c) => handleSelectOne(entry.id, !!c)}
+                                            disabled={isReadOnly}
                                         />
                                     </td>
                                     {/* @ts-ignore */}
@@ -248,14 +253,16 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset }: Co
                                                 </TooltipProvider>
                                             )}
                                             <span>{entry.students?.name}</span>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="h-6 w-6 ml-1 text-muted-foreground hover:text-foreground"
-                                                onClick={() => startEdit(entry.students)}
-                                            >
-                                                <Pencil className="h-3 w-3" />
-                                            </Button>
+                                            {!isReadOnly && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-6 w-6 ml-1 text-muted-foreground hover:text-foreground"
+                                                    onClick={() => startEdit(entry.students)}
+                                                >
+                                                    <Pencil className="h-3 w-3" />
+                                                </Button>
+                                            )}
                                         </div>
                                     </td>
                                     {/* @ts-ignore */}
