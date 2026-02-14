@@ -58,9 +58,9 @@ export function SiteFooter() {
                         <div className="space-y-4 text-sm">
                             <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Contact</div>
                             <div className="space-y-3">
-                                <a href="mailto:ullas4101997@gmail.com" className="inline-flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
+                                <a href="mailto:hello@ull0sm.in" className="inline-flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
                                     <Mail className="h-4 w-4" />
-                                    ullas4101997@gmail.com
+                                    hello@ull0sm.in
                                 </a>
                                 <a href="mailto:hello@suprateekyawagal.in" className="inline-flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
                                     <Mail className="h-4 w-4" />
