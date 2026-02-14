@@ -1,0 +1,202 @@
+'use client'
+
+import React from 'react'
+import Link from 'next/link'
+import Image from 'next/image'
+import {
+    LayoutDashboard,
+    Calendar,
+    CheckCircle2,
+    Building2,
+    Users,
+    FileText,
+    Menu,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { DashboardNavLink } from '@/components/dashboard/nav-link'
+import { SignOutForm } from '@/components/dashboard/signout-form'
+import { Badge } from '@/components/ui/badge'
+import { DashboardBackGate } from '@/components/dashboard/dashboard-back-gate'
+import { ThemeSwitch } from '@/components/app/theme-toggle'
+import { MobileNav } from '@/components/dashboard/mobile-nav'
+import { Button } from '@/components/ui/button'
+
+type ResponsiveDashboardFrameProps = {
+    children: React.ReactNode
+    role: string
+    roleLabel: string
+    profileFullName: string | null
+    userEmail: string
+}
+
+export function ResponsiveDashboardFrame({
+    children,
+    role,
+    roleLabel,
+    profileFullName,
+    userEmail,
+}: ResponsiveDashboardFrameProps) {
+    const [sidebarOpen, setSidebarOpen] = React.useState(true)
+
+    return (
+        <div className="dashboard-shell min-h-screen w-full relative">
+            <div className="fixed inset-0 -z-10 h-full w-full bg-background bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]">
+                <div className="absolute left-0 bottom-0 -z-10 h-[300px] w-[300px] rounded-full bg-primary/5 blur-[100px]" />
+            </div>
+
+            <div className="mx-auto flex min-h-screen w-full max-w-7xl">
+                <aside
+                    className={cn(
+                        'hidden flex-col border-r bg-background/50 backdrop-blur-xl px-4 py-5 md:flex sticky top-0 h-screen transition-all duration-200',
+                        sidebarOpen ? 'w-72 opacity-100' : 'w-0 px-0 py-0 border-r-0 overflow-hidden opacity-0',
+                    )}
+                >
+                    <DashboardBackGate />
+                    <div className="flex items-center justify-between gap-3 mb-6">
+                        <Link href="/dashboard" className="flex-1 rounded-xl px-2 py-1 transition-colors hover:bg-accent/30">
+                            <div className="flex items-center gap-3">
+                                <div className="relative h-10 w-10 overflow-hidden rounded-xl border border-border/50 bg-background/70 dark:border-white/[0.12]">
+                                    <Image src="/favicon.ico" alt="EntryDesk logo" fill className="object-cover" sizes="40px" priority />
+                                </div>
+                                <div className="leading-tight">
+                                    <div className="text-sm font-bold tracking-tight">EntryDesk</div>
+                                    <div className="text-xs text-muted-foreground font-medium">{roleLabel}</div>
+                                </div>
+                            </div>
+                        </Link>
+                        <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            aria-label="Close sidebar"
+                            onClick={() => setSidebarOpen(false)}
+                        >
+                            <Menu className="h-5 w-5" />
+                        </Button>
+                    </div>
+
+                    <div className="flex flex-1 flex-col gap-1">
+                        <div className="px-3 py-2">
+                            <h3 className="mb-2 px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+                                Overview
+                            </h3>
+                            <div className="space-y-1">
+                                <DashboardNavLink href="/dashboard">
+                                    <LayoutDashboard className="h-4 w-4" />
+                                    Home
+                                </DashboardNavLink>
+                            </div>
+                        </div>
+
+                        <div className="px-3 py-2">
+                            <h3 className="mb-2 px-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
+                                {role === 'organizer' ? 'Management' : 'Dojo Management'}
+                            </h3>
+                            <div className="space-y-1">
+                                {role === 'organizer' ? (
+                                    <>
+                                        <DashboardNavLink href="/dashboard/events">
+                                            <Calendar className="h-4 w-4" />
+                                            Events
+                                        </DashboardNavLink>
+                                        <DashboardNavLink href="/dashboard/approvals">
+                                            <CheckCircle2 className="h-4 w-4" />
+                                            Approvals
+                                        </DashboardNavLink>
+                                    </>
+                                ) : (
+                                    <>
+                                        <DashboardNavLink href="/dashboard/events-browser">
+                                            <Calendar className="h-4 w-4" />
+                                            Events
+                                        </DashboardNavLink>
+                                        <DashboardNavLink href="/dashboard/dojos">
+                                            <Building2 className="h-4 w-4" />
+                                            My Dojos
+                                        </DashboardNavLink>
+                                        <DashboardNavLink href="/dashboard/students">
+                                            <Users className="h-4 w-4" />
+                                            Students
+                                        </DashboardNavLink>
+                                        <DashboardNavLink href="/dashboard/entries">
+                                            <FileText className="h-4 w-4" />
+                                            My Entries
+                                        </DashboardNavLink>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="mt-auto">
+                        <div className="border-t border-black/10 pt-4 px-2 dark:border-white/10">
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="flex items-center gap-2">
+                                    <Badge variant={role === 'organizer' ? 'success' : 'secondary'} className="capitalize border-primary/20 bg-primary/10 text-primary pointer-events-none text-[10px] px-2 py-0.5 h-5">
+                                        {role}
+                                    </Badge>
+                                </div>
+                                <ThemeSwitch className="scale-[0.8]" />
+                            </div>
+
+                            <div className="flex items-center gap-3 mb-3 px-1">
+                                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium border border-black/10 dark:border-white/10">
+                                    {profileFullName?.[0] || userEmail?.[0]?.toUpperCase()}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="text-sm font-medium truncate">{profileFullName || 'User'}</div>
+                                    <div className="text-xs text-muted-foreground truncate">{userEmail}</div>
+                                </div>
+                            </div>
+                            <SignOutForm />
+                        </div>
+                    </div>
+                </aside>
+
+                <div className="flex min-w-0 flex-1 flex-col">
+                    <div className="sticky top-0 z-10 border-b bg-background/60 backdrop-blur-xl md:hidden">
+                        <div className="flex h-14 items-center justify-between px-4">
+                            <div className="flex items-center gap-2">
+                                <MobileNav role={role} profile={{ full_name: profileFullName }} userEmail={userEmail} />
+                                <Link href="/dashboard" className="rounded-md transition-colors hover:bg-accent/30 px-1 py-0.5">
+                                    <div className="flex items-center gap-2">
+                                        <div className="relative h-8 w-8 overflow-hidden rounded-md border border-border/50 bg-background/70 dark:border-white/[0.12]">
+                                            <Image src="/favicon.ico" alt="EntryDesk logo" fill className="object-cover" sizes="32px" priority />
+                                        </div>
+                                        <span className="text-sm font-bold tracking-tight">EntryDesk</span>
+                                    </div>
+                                </Link>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <ThemeSwitch className="scale-[0.85]" />
+                                <Badge variant={role === 'organizer' ? 'success' : 'secondary'} className="capitalize border-primary/20 bg-primary/10 text-primary">
+                                    {role}
+                                </Badge>
+                            </div>
+                        </div>
+                    </div>
+
+                    <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+                        {!sidebarOpen ? (
+                            <div className="mb-4 hidden md:flex">
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label="Open sidebar"
+                                    onClick={() => setSidebarOpen(true)}
+                                >
+                                    <Menu className="h-5 w-5" />
+                                </Button>
+                            </div>
+                        ) : null}
+
+                        <div className={cn('mx-auto w-full relative', sidebarOpen ? 'max-w-6xl' : 'max-w-none')}>
+                            {children}
+                        </div>
+                    </main>
+                </div>
+            </div>
+        </div>
+    )
+}

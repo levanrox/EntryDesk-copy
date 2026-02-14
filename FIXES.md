@@ -1384,3 +1384,273 @@ This combines intent confirmation + explicit user action before submitting the s
 - Accidental organizer deletions are significantly less likely.
 - Intentional deletion remains available but now requires deliberate confirmation behavior.
 - Database enforces final correctness even if client/server race paths occur.
+
+---
+
+# Session 13 — Public Landing + Hero/Footer + Navigation/UX Pass (Detailed)
+
+This session focused on the public-facing experience (especially for logged-out users), anchor scrolling behavior, hero/footer polish, dashboard nav toggles, and image delivery optimization.
+
+## 1) Public events should be visible without login
+
+### Symptom
+- On landing page, clicking **View event** forced `/login` every time.
+- Users could not inspect basic public event details unless authenticated.
+
+### Root cause
+- Landing event card CTA was hard-wired to `/login?next=/events/:id`.
+
+### Fix
+- Replaced login redirect behavior with in-page event details interaction.
+- Public cards always show basic event metadata (title/type/date/location/capacity).
+- Description is hidden by default and shown only when explicitly requested.
+
+### Files
+- `src/app/page.tsx`
+- `src/components/app/public-events-section.tsx` (new)
+
+---
+
+## 2) Split landing events into Upcoming/Past with 3-item preview + view-all
+
+### Requirement
+- Separate upcoming and past events.
+- Show only 3 items by default in each section.
+- Show “view all” only if section has more than 3.
+
+### Fix
+- Added two grouped lists:
+  - **Upcoming events**
+  - **Past events**
+- Added section-local toggles:
+  - `View all ...` / `Show less`
+- Kept default preview at 3 cards per section.
+
+### Files
+- `src/components/app/public-events-section.tsx`
+
+---
+
+## 3) Hydration mismatch fix (date rendering)
+
+### Symptom
+- React hydration warning on landing events:
+  - server/client date text mismatch (locale differences like `2/6/2026` vs `6/2/2026`).
+
+### Root cause
+- `toLocaleDateString()` inside a client-rendered path produced locale-dependent output.
+
+### Fix
+- Replaced locale-dependent formatting with deterministic formatter (`DD/MM/YYYY`).
+- Passed server snapshot (`todayIso`) to client component for stable section grouping at hydration time.
+
+### Files
+- `src/components/app/public-events-section.tsx`
+- `src/app/page.tsx`
+
+---
+
+## 4) “View event” should open popup modal (not inline slide-down)
+
+### Requirement
+- Open selected event in a big popup with blurred background.
+- Keep description in popup view.
+
+### Fix
+- Replaced inline expansion with dialog modal flow:
+  - selected event state
+  - centered dialog
+  - blurred backdrop
+- Added explicit **Description** label in event modal content.
+
+### Supporting change
+- Extended shared `DialogContent` to accept `overlayClassName` for controlled overlay styling.
+
+### Files
+- `src/components/app/public-events-section.tsx`
+- `src/components/ui/dialog.tsx`
+
+---
+
+## 5) Hash links should smooth-scroll on same page (no route-like jump)
+
+### Symptom
+- `Events` / `Browse Events` / `Features` felt like redirect/jump behavior.
+
+### Root cause
+- Hash targets + link wrappers were mixed; one button wrapped inside anchor created invalid structure.
+- Smooth scroll rule was accidentally placed inside `:root` block (ineffective).
+
+### Fix
+- Switched landing hash navigation to plain anchors for in-page sections.
+- Used valid `Button asChild` anchor markup.
+- Moved smooth-scroll CSS to top-level `html { scroll-behavior: smooth; }`.
+
+### Files
+- `src/app/page.tsx`
+- `src/app/globals.css`
+
+---
+
+## 6) Section targeting fixes + Contact nav
+
+### Symptom
+- `Events` sometimes landed where past list was more visible first.
+
+### Fix
+- Created explicit section target for upcoming list: `#upcoming-events`.
+- Updated top-nav + CTA links to that anchor.
+- Added top nav **Contact** link and anchored footer as `#contact`.
+- Added scroll offsets (`scroll-mt-24`) to avoid fixed-header overlap.
+
+### Files
+- `src/app/page.tsx`
+- `src/components/app/public-events-section.tsx`
+- `src/components/app/landing-ui-preview.tsx`
+- `src/components/app/site-footer.tsx`
+
+---
+
+## 7) Footer redesign pass (spacing, hierarchy, links)
+
+### Requirement
+- Footer looked cramped/bland and needed cleaner visual structure.
+
+### Fixes applied iteratively
+- Increased spacing and visual rhythm.
+- Improved typography hierarchy and grouping.
+- Added gradient/surface treatment and border consistency.
+- Refined links and contact sections.
+- Added contribution callout:
+  - **Open for contribution** + GitHub link.
+- Added icons:
+  - GitHub icon
+  - Email icons
+- Added `Features` in links section.
+- Later adjusted links to vertical stack and removed GitHub from links list (kept contribution callout link).
+
+### Files
+- `src/components/app/site-footer.tsx`
+
+---
+
+## 8) Footer Gemini image blending
+
+### Requirement
+- Use Gemini-generated image in footer background, blurred and blended.
+
+### Fixes
+- Copied asset into public path:
+  - `public/footer-gemini-bg.png`
+- Added layered footer background system:
+  - background image layer
+  - gradient readability overlay
+  - foreground content surface
+- Tuned opacity/blur/position multiple times based on visual feedback to improve visibility.
+
+### Files
+- `public/footer-gemini-bg.png`
+- `src/components/app/site-footer.tsx`
+
+---
+
+## 9) “Mock Dashboard” messaging clarity in hero preview
+
+### Requirement evolution
+- Explicitly communicate preview is mock/sample data.
+- Copy and placement iterated for readability.
+
+### Finalized copy/layout
+- Heading: **Mock Dashboards***
+- Subtitle: **This is how it would look once you get started!!**
+- Subtle note: **\*This is sample data**
+- Subtitle centered under heading; sample-data note positioned to the right between heading block and view switch.
+
+### Files
+- `src/components/app/landing-ui-preview.tsx`
+
+---
+
+## 10) Hero image treatment from public asset
+
+### Requirement
+- Use hero image from `public` and match blended cinematic look.
+
+### Fix
+- Hero now uses full-bleed `next/image` background (`/Hero image.png`) with layered overlays and text-on-image contrast.
+
+### Later tuning
+- Reduced overlay darkness after feedback so image remains visible (not over-tinted).
+
+### Files
+- `src/app/page.tsx`
+
+---
+
+## 11) Header blend over hero + scroll-based opacity behavior
+
+### Requirement
+- Header should blend with hero at top.
+- On scroll, header should retain stronger translucent/background-tinted behavior.
+
+### Fix
+- Introduced client landing header with scroll state:
+  - at top: light blue-tinted translucent glass
+  - after scroll threshold: stronger translucent background tint
+- Added nav/button interaction polish (hover + active states), excluding theme switch.
+
+### Files
+- `src/components/app/landing-header.tsx` (new)
+- `src/app/page.tsx`
+
+---
+
+## 12) Dashboard 3-bar toggle behavior (desktop + mobile)
+
+### Requirement
+- Add sidebar open/close 3-bar on desktop too.
+- Verify mobile already has it.
+
+### Findings
+- Mobile already had hamburger (`MobileNav`) and was kept.
+- Desktop initially got a separate top menu bar, which was rejected.
+
+### Final fix
+- Added sidebar-close hamburger inside desktop side panel itself.
+- Added compact reopen hamburger in main area only when sidebar is collapsed.
+- Removed separate desktop “Menu” top header row.
+
+### Files
+- `src/components/dashboard/responsive-dashboard-frame.tsx` (new)
+- `src/app/dashboard/layout.tsx` (switched to responsive frame)
+
+---
+
+## 13) Image configuration optimization (requested as image-only pass)
+
+### Requirement
+- Apply image optimization config only (no extra UX changes).
+
+### Fix
+- Added Next.js image optimization config:
+  - AVIF/WebP output formats
+  - tuned `deviceSizes`
+  - `imageSizes`
+  - `minimumCacheTTL`
+- Kept hero `sizes` explicitly responsive.
+
+### Files
+- `next.config.ts`
+- `src/app/page.tsx`
+
+---
+
+## Final status for this session
+
+- Public landing now supports full event discovery without forced login.
+- Event details open in modal with blur backdrop.
+- Anchors scroll smoothly and land on intended sections.
+- Hero/header/footer are visually blended and interaction-polished.
+- Footer includes contribution/contact enhancements and blended background image.
+- Dashboard desktop + mobile both provide 3-bar navigation toggles.
+- Next image pipeline is configured for better mobile delivery.

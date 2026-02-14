@@ -9,10 +9,14 @@ export function LandingUiPreview() {
     const [activeView, setActiveView] = useState<'coach' | 'organizer'>('coach')
 
     return (
-        <section id="features" className="mx-auto max-w-7xl px-6 py-20">
+        <section id="features" className="mx-auto max-w-7xl scroll-mt-24 px-6 py-20">
             <div className="text-center">
-                <h2 className="text-4xl font-bold tracking-tight">Built for coaches and organizers</h2>
-                <p className="mt-3 text-xl text-muted-foreground">Different workflows, Same platform.</p>
+                <h2 className="text-4xl font-bold tracking-tight">Mock Dashboards<span className="align-super text-base text-muted-foreground">*</span></h2>
+                <p className="mx-auto mt-3 max-w-4xl text-center text-xl text-muted-foreground">This is how it would look once you get started!!</p>
+            </div>
+
+            <div className="mx-auto mt-2 flex max-w-6xl justify-end">
+                <span className="text-sm text-muted-foreground/80">*This is sample data</span>
             </div>
 
             <div className="mt-7 flex items-center justify-center gap-2">

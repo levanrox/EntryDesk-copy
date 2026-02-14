@@ -4,6 +4,10 @@
 
 @plugin "tailwindcss-animate";
 
+html {
+  scroll-behavior: smooth;
+}
+
 :root {
   /* Green / White / Black Theme - Light Mode */
 

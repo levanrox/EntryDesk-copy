@@ -1,55 +1,79 @@
 'use client'
 
 import Link from 'next/link'
+import { ArrowUpRight, Github, Mail } from 'lucide-react'
 
 export function SiteFooter() {
     return (
-        <footer className="border-t border-border/40 bg-background dark:border-white/[0.08]">
-            <div className="mx-auto grid max-w-6xl gap-6 px-4 py-8 sm:px-6 md:grid-cols-3 md:items-start">
-                <div>
-                    <div className="text-sm font-semibold">EntryDesk</div>
-                    <p className="mt-2 text-sm text-muted-foreground">
-                        Lightweight event operations for coaches and organizers.
-                    </p>
-                </div>
+        <footer id="contact" className="scroll-mt-24 relative isolate overflow-hidden border-t border-border/40 bg-background/70 dark:border-white/[0.08] dark:bg-background/60">
+            <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 -z-10 bg-cover bg-[center_35%] opacity-75 blur-[1px] scale-105 dark:opacity-80"
+                style={{ backgroundImage: "url('/footer-gemini-bg.png')" }}
+            />
+            <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-b from-background/28 via-background/40 to-background/58 dark:from-background/18 dark:via-background/32 dark:to-background/52"
+            />
 
-                <div className="space-y-2 text-sm">
-                    <div className="font-medium">Links</div>
-                    <div>
-                        <Link href="/#events" className="text-muted-foreground hover:text-foreground">
-                            Events
-                        </Link>
-                    </div>
-                    <div>
-                        <Link href="/login" className="text-muted-foreground hover:text-foreground">
-                            Login
-                        </Link>
-                    </div>
-                    <div>
-                        <a
-                            href="https://github.com/ull0sm/EntryDesk"
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-muted-foreground hover:text-foreground"
-                        >
-                            GitHub
-                        </a>
-                    </div>
-                </div>
+            <div className="relative z-10 mx-auto max-w-6xl px-4 pb-6 pt-14 sm:px-6">
+                <div className="rounded-3xl border border-border/60 bg-background/35 p-8 shadow-sm backdrop-blur-[2px] dark:border-white/[0.12] dark:bg-background/25 md:p-10">
+                    <div className="grid gap-10 md:grid-cols-3 md:items-start">
+                        <div>
+                            <div className="inline-flex items-center rounded-full border border-border/60 bg-muted/30 px-3 py-1 text-xs font-medium text-muted-foreground dark:border-white/[0.12] dark:bg-white/[0.04]">
+                                EntryDesk
+                            </div>
+                            <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
+                                Lightweight event operations for coaches and organizers.
+                            </p>
+                            <a
+                                href="https://github.com/ull0sm/EntryDesk"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-foreground/90 transition-colors hover:text-foreground"
+                            >
+                                <Github className="h-4 w-4" />
+                                Open for contribution
+                            </a>
+                        </div>
 
-                <div className="space-y-2 text-sm">
-                    <div className="font-medium">Contact</div>
-                    <a href="mailto:ullas4101997@gmail.com" className="block text-muted-foreground hover:text-foreground">
-                        ullas4101997@gmail.com
-                    </a>
-                    <a href="mailto:hello@suprateekyawagal.in" className="block text-muted-foreground hover:text-foreground">
-                        hello@suprateekyawagal.in
-                    </a>
+                        <div className="space-y-4 text-sm">
+                            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Links</div>
+                            <div className="space-y-3">
+                                <Link href="/#features" className="group flex w-fit items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
+                                    Features
+                                    <ArrowUpRight className="h-3.5 w-3.5 opacity-65 transition-opacity group-hover:opacity-100" />
+                                </Link>
+                                <Link href="/#upcoming-events" className="group flex w-fit items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
+                                    Events
+                                    <ArrowUpRight className="h-3.5 w-3.5 opacity-65 transition-opacity group-hover:opacity-100" />
+                                </Link>
+                                <Link href="/login" className="group flex w-fit items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
+                                    Login
+                                    <ArrowUpRight className="h-3.5 w-3.5 opacity-65 transition-opacity group-hover:opacity-100" />
+                                </Link>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4 text-sm">
+                            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Contact</div>
+                            <div className="space-y-3">
+                                <a href="mailto:ullas4101997@gmail.com" className="inline-flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
+                                    <Mail className="h-4 w-4" />
+                                    ullas4101997@gmail.com
+                                </a>
+                                <a href="mailto:hello@suprateekyawagal.in" className="inline-flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground">
+                                    <Mail className="h-4 w-4" />
+                                    hello@suprateekyawagal.in
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <div className="border-t border-border/40 dark:border-white/[0.08]">
-                <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 text-xs text-muted-foreground sm:px-6">
+                <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 text-xs text-muted-foreground sm:px-6">
                     <span>© {new Date().getFullYear()} EntryDesk</span>
                     <span>Next.js • Supabase • Tailwind</span>
                 </div>
