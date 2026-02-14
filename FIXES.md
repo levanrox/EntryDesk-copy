@@ -57,6 +57,8 @@ This doc captures the main issues encountered while setting up/running the app l
 - **11th session:** Prevented accidental duplicate event creation end-to-end with layered protection: frontend submit lock, backend dedupe guard, and DB unique index migration.
 - **11th session:** Documented safe Supabase rollout path for existing projects, including duplicate pre-check/cleanup SQL before applying the unique index.
 
+- **12th session:** Hardened organizer event deletion UX with a 3-dot actions menu + destructive modal + typed confirmation (`delete`) to reduce accidental data loss.
+
 ## 1) Supabase migration error: `must be owner of table users`
 
 **Symptom**
@@ -1318,4 +1320,67 @@ where e.id = d.id;
 
 - Double-tap on Create Event no longer creates duplicate rows.
 - Concurrency races are handled gracefully.
+
+---
+
+# Session 12 — Safer Event Deletion (Accidental Delete Protection)
+
+This session improves organizer safety around event deletion. The previous flow used a single click + browser confirm, which was easy to trigger unintentionally.
+
+## Problem statement
+
+**Symptom**
+- Organizers could accidentally delete an event from a simple destructive button flow.
+
+**Risk**
+- Event deletion is high-impact and hard to recover from.
+- A single lightweight confirmation (`window.confirm`) is not strong enough protection for destructive actions.
+
+## New deletion pattern (multi-step confirmation)
+
+The delete flow is now intentionally friction-based:
+
+1) Open **3-dot actions menu**.
+2) Choose **Delete event**.
+3) See destructive warning dialog.
+4) Type `delete` in an input field.
+5) Final **Delete permanently** button enables only when typed text matches.
+
+This combines intent confirmation + explicit user action before submitting the server action.
+
+## What changed
+
+### 1) Replaced inline delete button with actions menu
+- Added a compact 3-dot trigger using existing dropdown primitives.
+- Moved delete into a contextual menu item (`Delete event`).
+
+### 2) Replaced `window.confirm` with custom destructive dialog
+- Added a dedicated modal with stronger warning copy.
+- Shows that deletion is irreversible and may remove related event data.
+
+### 3) Added typed keyword confirmation gate
+- User must type `delete` (case-insensitive) to unlock final submit.
+- Prevents reflexive confirmation clicks.
+
+### 4) Added event title context inside dialog
+- The modal displays the current event title to reduce “wrong record” deletion mistakes.
+
+## Why this is better than the old approach
+
+- **Higher intent assurance:** requires explicit typed input, not just quick click-through.
+- **Lower accidental activation:** delete action is no longer a primary visible button.
+- **Context-aware safety:** event title in modal helps users verify they are deleting the intended event.
+- **No backend contract change needed:** still uses existing server action (`deleteEvent`) with stronger frontend guardrails.
+
+## Where
+
+- `src/components/events/delete-event-form.tsx`
+  - Reworked to use dropdown menu + dialog + typed confirmation gate.
+- `src/app/dashboard/events/[id]/layout.tsx`
+  - Passes `eventTitle` into delete component for contextual confirmation.
+
+## Net result
+
+- Accidental organizer deletions are significantly less likely.
+- Intentional deletion remains available but now requires deliberate confirmation behavior.
 - Database enforces final correctness even if client/server race paths occur.

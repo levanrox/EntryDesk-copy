@@ -38,7 +38,7 @@ export default async function EventLayout({
                         <span className="capitalize">{event.event_type}</span>
                     </div>
                 </div>
-                {canDelete ? <DeleteEventForm eventId={event.id} /> : null}
+                {canDelete ? <DeleteEventForm eventId={event.id} eventTitle={event.title} /> : null}
             </div>
 
             {children}
