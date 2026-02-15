@@ -1536,14 +1536,14 @@ This session focused on the public-facing experience (especially for logged-out 
 
 ---
 
-## 8) Footer Gemini image blending
+## 8) Footer image blending
 
 ### Requirement
-- Use Gemini-generated image in footer background, blurred and blended.
+- Use AI-generated image in footer background, blurred and blended.
 
 ### Fixes
 - Copied asset into public path:
-  - `public/footer-gemini-bg.png`
+  - `public/footer bg.png`
 - Added layered footer background system:
   - background image layer
   - gradient readability overlay
@@ -1551,7 +1551,7 @@ This session focused on the public-facing experience (especially for logged-out 
 - Tuned opacity/blur/position multiple times based on visual feedback to improve visibility.
 
 ### Files
-- `public/footer-gemini-bg.png`
+- `public/footer bg.png`
 - `src/components/app/site-footer.tsx`
 
 ---
