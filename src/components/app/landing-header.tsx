@@ -48,6 +48,14 @@ export function LandingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                     <a href="#upcoming-events" className={navLinkClassName}>
                         Events
                     </a>
+                    <a
+                        href="https://testlist.shorinkai.in"
+                        target="_blank"
+                        rel="noreferrer"
+                        className={navLinkClassName}
+                    >
+                        Student Portal
+                    </a>
                     <a href="#contact" className={navLinkClassName}>
                         Contact
                     </a>

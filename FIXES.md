@@ -60,6 +60,7 @@ This doc captures the main issues encountered while setting up/running the app l
 - **12th session:** Hardened organizer event deletion UX with a 3-dot actions menu + destructive modal + typed confirmation (`delete`) to reduce accidental data loss.
 - **13th session:** Completed image-only optimization pass (Next image formats/sizes/cache + responsive hero `sizes`) without introducing unrelated UX changes.
 - **14th session:** Fixed Vercel production TypeScript build failure in dashboard entries by replacing an unsafe relation cast with normalized flattening + strict type guard filtering.
+- **15th session:** Integrated external Student Profile Portal (`testlist.shorinkai.in`) into landing UX with header link + dedicated section, then iteratively polished the mock preview (spacing, styling, and accent/avatar overlap fixes).
 
 ## 1) Supabase migration error: `must be owner of table users`
 
@@ -1691,3 +1692,82 @@ This session focused on the public-facing experience (especially for logged-out 
 - Dashboard desktop + mobile both provide 3-bar navigation toggles.
 - Next image pipeline is configured for better mobile delivery.
 - Vercel TypeScript build blocker on coach entries is resolved with safe relation normalization.
+
+---
+
+# Session 15 — Student Portal Integration & Landing UI Polish
+
+This session focused on blending the hosted Student Profile Portal into EntryDesk’s public landing experience without breaking existing layout rhythm.
+
+## 1) Integrate Testlist portal into landing flow
+
+### Requirement
+- Expose hosted student portal (`testlist.shorinkai.in`) inside EntryDesk landing experience.
+- Add link in header/title bar and include clear explanatory content on page.
+
+### Fix
+- Added top-nav external link: **Student Portal**.
+- Added a dedicated landing section for student-portal context + CTA.
+
+### Files
+- `src/components/app/landing-header.tsx`
+- `src/app/page.tsx`
+- `src/components/app/student-portal-section.tsx` (new)
+
+---
+
+## 2) Section content/layout refinement after visual feedback
+
+### Symptom
+- Initial integration left visible empty space and secondary CTA noise.
+- “Continue in EntryDesk” CTA was unnecessary in that block.
+
+### Root cause
+- Right-side panel was too text-heavy and under-utilized visually.
+- Section hierarchy did not match surrounding “showcase” style.
+
+### Fix
+- Removed “Continue in EntryDesk” button.
+- Added heading + supporting line above section for better narrative flow.
+- Replaced static snapshot text block with a compact **mock student profile UI** (identity card, belt badge, stats, competition history snippet).
+
+### Files
+- `src/components/app/student-portal-section.tsx`
+
+---
+
+## 3) Visual cleanup: too many border lines + accent overpowering content
+
+### Symptom
+- Preview looked overly outlined/“wireframe”.
+- Green accent strip visually overpowered content and appeared to override avatar `A` tile.
+
+### Root cause
+- Excessive border usage on nested containers/tiles.
+- Accent strip intensity + stacking made the avatar overlap feel visually incorrect.
+
+### Fix
+- Reduced border noise by switching multiple blocks to soft surfaces/rings.
+- Toned accent to a muted gradient and reduced height.
+- Fixed avatar overlap using explicit stacking and surface:
+  - avatar tile now uses `z-10`
+  - solid `bg-card` tile surface
+  - adjusted top spacing (`pt-5`) and overlap depth (`-top-5`)
+
+### Why this is correct
+- Keeps brand accent while avoiding color dominance.
+- Preserves readability and hierarchy in dark mode.
+- Eliminates the “accent overriding avatar” visual artifact.
+
+### Files
+- `src/components/app/student-portal-section.tsx`
+
+---
+
+## Verification
+
+- Diagnostics check completed for all touched files:
+  - `src/app/page.tsx`
+  - `src/components/app/landing-header.tsx`
+  - `src/components/app/student-portal-section.tsx`
+- Result: **No errors found**.

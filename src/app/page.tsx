@@ -6,6 +6,7 @@ import { ArrowRight } from 'lucide-react'
 import { LandingUiPreview } from '@/components/app/landing-ui-preview'
 import { PublicEventsSection } from '@/components/app/public-events-section'
 import { LandingHeader } from '@/components/app/landing-header'
+import { StudentPortalSection } from '@/components/app/student-portal-section'
 
 export default async function LandingPage() {
     const supabase = await createClient()
@@ -75,6 +76,8 @@ export default async function LandingPage() {
             </section>
 
             <LandingUiPreview />
+
+            <StudentPortalSection />
 
             <section className="mx-auto max-w-7xl px-6 pb-20 pt-4 md:px-8 xl:max-w-[95vw] xl:px-8">
                 <PublicEventsSection events={events ?? null} todayIso={todayIso} />
