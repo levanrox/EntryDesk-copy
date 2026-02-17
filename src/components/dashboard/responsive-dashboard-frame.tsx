@@ -44,7 +44,7 @@ export function ResponsiveDashboardFrame({
                 <div className="absolute left-0 bottom-0 -z-10 h-[300px] w-[300px] rounded-full bg-primary/5 blur-[100px]" />
             </div>
 
-            <div className="mx-auto flex min-h-screen w-full max-w-7xl">
+            <div className="flex min-h-screen w-full">
                 <aside
                     className={cn(
                         'hidden flex-col border-r bg-background/50 backdrop-blur-xl px-4 py-5 md:flex sticky top-0 h-screen transition-all duration-200',
