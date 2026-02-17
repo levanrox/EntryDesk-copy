@@ -174,7 +174,7 @@ export function ResponsiveDashboardFrame({
                         </div>
                     </div>
 
-                    <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+                    <main className="flex-1 px-2 py-6 sm:px-4 lg:px-6">
                         {!sidebarOpen ? (
                             <div className="mb-4 hidden md:flex">
                                 <Button
@@ -189,7 +189,7 @@ export function ResponsiveDashboardFrame({
                             </div>
                         ) : null}
 
-                        <div className={cn('mx-auto w-full relative', sidebarOpen ? 'max-w-6xl' : 'max-w-none')}>
+                        <div className="w-full relative">
                             {children}
                         </div>
                     </main>
