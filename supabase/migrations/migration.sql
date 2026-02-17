@@ -1,5 +1,8 @@
 -- Update-only migration: role-based RLS and organizer view hardening
 
+ALTER TABLE students
+ADD COLUMN IF NOT EXISTS generic_checked boolean NOT NULL DEFAULT false;
+
 -- POLICIES: drop old, recreate new
 DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON profiles;
 

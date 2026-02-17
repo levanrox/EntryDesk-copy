@@ -3,9 +3,18 @@ import { ApprovalButtons } from '@/components/approvals/approval-buttons'
 import { DashboardPageHeader } from '@/components/dashboard/page-header'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { CheckSquare, Calendar } from 'lucide-react'
+import { PaginationControls } from '@/components/ui/pagination-controls'
 
-export default async function ApprovalsPage() {
+export default async function ApprovalsPage({
+    searchParams,
+}: {
+    searchParams?: Promise<{ page?: string }>
+}) {
     const { supabase, user } = await requireRole(['organizer', 'admin'], { redirectTo: '/dashboard' })
+    const sp = await searchParams
+    const page = Math.max(1, Number(sp?.page) || 1)
+    const limit = 50
+    const offset = (page - 1) * limit
 
     // 1. Get my event IDs
     const { data: events } = await supabase
@@ -22,7 +31,7 @@ export default async function ApprovalsPage() {
                     title="Approvals"
                     description="Review coach requests to join your events."
                 />
-                <div className="rounded-2xl border border-dashed border-black/10 bg-muted/20 py-8 text-center dark:border-white/10">
+                <div className="dashboard-empty py-8 text-center">
                     <Calendar className="mx-auto mb-2 h-6 w-6 text-muted-foreground" />
                     <p className="text-sm font-medium">No events yet</p>
                     <p className="mt-1 text-xs text-muted-foreground">Create an event to start receiving coach requests.</p>
@@ -32,21 +41,25 @@ export default async function ApprovalsPage() {
     }
 
     // 2. Get applications
-    const { data: applications } = await supabase
+    const { data: applications, count } = await supabase
         .from('event_applications')
-        .select('*, profiles(full_name, email), events(title)')
+        .select('*, profiles(full_name, email), events(title)', { count: 'exact' })
         .in('event_id', eventIds)
         .eq('status', 'pending')
         .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1)
+
+    const totalCount = count ?? 0
+    const totalPages = Math.ceil(totalCount / limit)
 
     return (
         <div className="space-y-4">
             <DashboardPageHeader
                 title="Approvals"
-                description={`${applications?.length || 0} pending requests`}
+                description={`${totalCount} pending requests`}
             />
 
-            <div className="rounded-2xl border border-black/5 bg-gradient-to-b from-background/95 to-background/70 shadow-[0_12px_30px_-22px_rgba(0,0,0,0.25)] dark:border-white/10 dark:bg-background/40 dark:from-background/60 dark:to-background/30 dark:shadow-black/40">
+            <div className="dashboard-surface">
                 {applications && applications.length > 0 ? (
                     <Table>
                         <TableHeader>
@@ -83,6 +96,8 @@ export default async function ApprovalsPage() {
                     </div>
                 )}
             </div>
+
+            <PaginationControls page={page} totalPages={totalPages} totalCount={totalCount} />
         </div>
     )
 }

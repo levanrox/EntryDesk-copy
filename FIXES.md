@@ -51,6 +51,17 @@ This doc captures the main issues encountered while setting up/running the app l
 - **9th session:** Fixed DOB imported as numbers (Excel serials) via DOB normalization at parse, save, and render.
 - **9th session:** Bulk upload review UX: added dojo selection in review step, cancel import, and row checkboxes + “Delete selected”.
 
+- **10th session:** Dashboard UI polish pass — softened harsh borders, unified card/list hover surfaces to match Home style, and improved visual consistency for coach + organizer event pages.
+- **10th session:** Updated organizer event demographics block: Female shown first, F/M color-coded (pink/blue), with per-gender participation bars based on total entries.
+
+- **11th session:** Prevented accidental duplicate event creation end-to-end with layered protection: frontend submit lock, backend dedupe guard, and DB unique index migration.
+- **11th session:** Documented safe Supabase rollout path for existing projects, including duplicate pre-check/cleanup SQL before applying the unique index.
+
+- **12th session:** Hardened organizer event deletion UX with a 3-dot actions menu + destructive modal + typed confirmation (`delete`) to reduce accidental data loss.
+- **13th session:** Completed image-only optimization pass (Next image formats/sizes/cache + responsive hero `sizes`) without introducing unrelated UX changes.
+- **14th session:** Fixed Vercel production TypeScript build failure in dashboard entries by replacing an unsafe relation cast with normalized flattening + strict type guard filtering.
+- **15th session:** Integrated external Student Profile Portal (`testlist.shorinkai.in`) into landing UX with header link + dedicated section, then iteratively polished the mock preview (spacing, styling, and accent/avatar overlap fixes).
+
 ## 1) Supabase migration error: `must be owner of table users`
 
 **Symptom**
@@ -569,6 +580,153 @@ This session focused on reducing dashboard clutter, making coach “event browsi
 
 ---
 
+# Session 10 — Hero/Auth Redesign + Dashboard UI Normalization + Branding Cleanup
+
+This session focused on aligning the product UI with the redesign references while keeping existing product behavior and data flows intact.
+
+## 1) Landing page redesign mismatch (hero looked disconnected from actual product)
+
+**Symptom**
+- Landing page visuals did not match the redesign reference.
+- Hero mock content did not reflect real coach/organizer workflows.
+- CTA wording needed `Login / Signup` instead of old sign-in wording.
+
+**Root cause**
+- Existing landing page used a prior visual pattern and generic hero previews.
+- Branding mark used placeholder text blocks (`ED`) instead of the actual favicon asset.
+
+**Fix**
+- Reworked landing navbar + hero content and CTA language.
+- Added a dedicated coach/organizer preview section that mirrors actual dashboard concepts.
+- Updated branding mark in landing header to use the favicon image (`/favicon.ico`) instead of text-based placeholder.
+
+**Where**
+- `src/app/page.tsx`
+- `src/components/app/landing-ui-preview.tsx`
+
+## 2) Login/Register UI needed to match hero language + clear auth feedback
+
+**Symptom**
+- Login/Register screen looked stylistically detached from the updated landing page.
+- Auth failures were generic and not user-friendly.
+
+**Root cause**
+- Login page and auth action redirects used broad error strings without stable message codes.
+
+**Fix**
+- Redesigned `login` + `register` tabs to match the same visual language as the hero.
+- Added structured auth status codes in server actions.
+- Added explicit inline messages for:
+  - invalid credentials,
+  - generic login failure,
+  - signup failure,
+  - Google auth launch failure,
+  - post-signup “check email” success guidance.
+- Replaced login header placeholder mark with favicon image (`/favicon.ico`).
+
+**Where**
+- `src/app/login/page.tsx`
+- `src/app/login/actions.ts`
+
+## 3) Dashboard pages felt visually inconsistent (harsh borders / uneven surfaces)
+
+**Symptom**
+- Cards, tables, and list containers across dashboard pages had inconsistent border/overlay intensity.
+- Interaction feedback varied by page and felt fragmented.
+
+**Root cause**
+- Several pages used page-local style combinations instead of shared dashboard surface/list primitives.
+
+**Fix**
+- Added shared dashboard component-layer classes for:
+  - shell-level surface containers,
+  - list separators,
+  - empty states,
+  - subtle active/press interactions.
+- Applied those shared styles across core dashboard pages.
+
+**Where**
+- `src/app/globals.css`
+- `src/app/dashboard/events/page.tsx`
+- `src/app/dashboard/entries/page.tsx`
+- `src/app/dashboard/approvals/page.tsx`
+- `src/app/dashboard/students/page.tsx`
+- `src/app/dashboard/dojos/page.tsx`
+- `src/app/dashboard/events-browser/page.tsx`
+- `src/app/dashboard/events/[id]/entries/page.tsx`
+
+## 4) List pages needed strict server-side pagination (50 rows/page)
+
+**Symptom**
+- Large datasets could over-render in list screens.
+- UX required strict page windows (e.g., 1–50, 51–100).
+
+**Root cause**
+- Some pages were still fully loading records or mixing server and client pagination patterns.
+
+**Fix**
+- Added uniform server-side pagination with page query param and `.range(...)` limits (`50`).
+- Updated shared pagination component to show row ranges (`start-end of total`).
+- Removed conflicting client-side row pagination from students table so server pagination remains authoritative.
+
+**Where**
+- `src/components/ui/pagination-controls.tsx`
+- `src/components/students/student-data-table.tsx`
+- `src/app/dashboard/students/page.tsx`
+- `src/app/dashboard/dojos/page.tsx`
+- `src/app/dashboard/entries/page.tsx`
+- `src/app/dashboard/approvals/page.tsx`
+- `src/app/dashboard/events/page.tsx`
+- `src/app/dashboard/events-browser/page.tsx`
+- `src/app/dashboard/events/[id]/entries/page.tsx`
+
+## 5) Organizer home dashboard required actionable active-event visibility
+
+**Symptom**
+- Organizer home lacked a direct “your active events” section with full-row navigation.
+
+**Fix**
+- Added organizer-only `Your Active Events` block on dashboard home.
+- Queried organizer events with active date condition (`end_date >= today`).
+- Made each list row fully clickable to the event detail route.
+
+**Where**
+- `src/app/dashboard/page.tsx`
+
+## 6) Organizer quick-actions sizing mismatch (needed identical compact cards)
+
+**Symptom**
+- Quick action tiles looked oversized/uneven.
+
+**Fix**
+- Reduced quick-actions section spacing and tile paddings.
+- Locked both quick-action cards to the exact same compact dimensions and icon sizing.
+
+**Where**
+- `src/app/dashboard/page.tsx`
+
+## 7) Branding mark cleanup: replace placeholder logos with favicon image
+
+**Symptom**
+- UI still showed placeholder logo marks (`ED` blocks / icon substitutes) in multiple headers.
+
+**Fix**
+- Replaced placeholder logo marks with the favicon image (`/favicon.ico`) in primary brand touchpoints.
+- Removed now-unneeded decorative icon imports used only for placeholder brand marks.
+
+**Where**
+- `src/app/page.tsx`
+- `src/app/login/page.tsx`
+- `src/app/dashboard/layout.tsx`
+- `src/components/dashboard/mobile-nav.tsx`
+
+## Verification notes
+
+- Checked updated files for TypeScript/compile diagnostics after critical patches.
+- Confirmed no remaining `ED` or `Prize` placeholder branding strings in `src/**` UI code.
+
+---
+
 # Session 9 — Bulk Student Import UX + Data Normalization
 
 This session fixes a handful of issues discovered while using the dashboard in real workflows: the nav drawer sizing, dojo save failures, DOB import edge cases from Excel, and quality-of-life tools in the bulk student import review screen.
@@ -963,3 +1121,653 @@ This session adds automatic “Past Events” grouping once an event date has pa
 **Where**
 - `src/app/dashboard/layout.tsx`
 - `src/components/dashboard/mobile-nav.tsx`
+
+---
+
+# Session 10 — UI Surface Polish + Demographics Visualization (Today)
+
+This session focused on visual quality and consistency across organizer and coach event flows. The goal was to remove harsh/contrasty outlines, align hover/surface treatment with the Home cards, and improve readability of demographic metrics.
+
+## 1) Harsh borders on cards/tables looked noisy
+
+**Symptom**
+- Card and table surfaces had high-contrast white-ish borders that felt sharp and distracting.
+- Across pages, border weight/contrast was inconsistent.
+
+**Root cause**
+- Mixed border/shadow treatments accumulated across components over multiple iterations.
+- Some list/table wrappers used stronger contrast than card surfaces.
+
+**Fix**
+- Softened border contrast and normalized container styling to subtle separators.
+- Preserved borders (did not remove them entirely), but matched the softer Home-card treatment.
+
+**Why this is correct**
+- Maintains structure and separation while reducing visual noise.
+- Keeps readability and hierarchy without “hard-line” artifacts.
+
+## 2) Hover/surface behavior was inconsistent vs Home cards
+
+**Symptom**
+- Home cards had the preferred “smooth” hover/surface behavior, but coach/organizer event surfaces did not match.
+
+**Fix**
+- Applied Home card-style hover and surface treatment to:
+  - coach event → My Entries card/list areas
+  - organizer events list + manage-event related surfaces
+  - student list/table blocks that were still using harsher styling
+
+**Why this is correct**
+- Users get one predictable visual language across dashboard modules.
+- Reduces context switching cost and makes screens feel part of one system.
+
+## 3) Organizer demographics block needed clearer information density
+
+**Request / Symptom**
+- Show Female first.
+- Color F pink and M blue.
+- Add bars that represent each gender’s entries as a proportion of total entries.
+
+**Fix**
+- Reordered demographic display to Female first, Male second.
+- Applied pink styling for female and blue styling for male values.
+- Added proportional bars using:
+  - Female bar width = $\frac{femaleCount}{totalEntries} \times 100$
+  - Male bar width = $\frac{maleCount}{totalEntries} \times 100$
+
+**Why this is correct**
+- Preserves exact counts while adding immediate visual ratio comprehension.
+- Color + order + bars together improve scanability for organizers.
+
+**Where (major touched areas)**
+- `src/components/coach/coach-entries-list.tsx`
+- `src/components/coach/coach-overview.tsx`
+- `src/components/coach/coach-student-register.tsx`
+- `src/app/dashboard/events/page.tsx`
+- `src/app/dashboard/events/[id]/page.tsx`
+- `src/app/globals.css`
+
+---
+
+# Session 11 — Duplicate Event Prevention (Frontend + Backend + Migration)
+
+This session addresses accidental double-creation when users tap/click “Create Event” twice quickly. The fix is intentionally layered so each tier protects the next one.
+
+## Problem statement
+
+**Symptom**
+- A rapid double tap on “Create Event” created two event rows.
+
+**Why this can happen**
+- UI can dispatch two submits before disabled/loading state is fully observed.
+- Even with frontend guard, concurrent requests can still race at backend/database level.
+
+## Architecture of the fix (defense in depth)
+
+1) **Frontend guard**: prevent duplicate submit from the same dialog interaction.
+2) **Backend guard**: detect recent same-payload create attempts and reuse existing event.
+3) **Database guard**: unique index guarantees duplicates cannot persist under race conditions.
+
+This three-layer model ensures reliability even when one layer is bypassed.
+
+## 1) Frontend: immediate submit lock on Create Event dialog
+
+**What changed**
+- In the create dialog submit handler, an in-memory lock (`useRef`) is checked before processing.
+- If already submitting, handler exits early.
+- Lock is set before awaiting server action and always released in `finally`.
+- Submit button remains disabled while `isSubmitting` is true.
+
+**Why**
+- Prevents accidental double-click/double-tap from issuing multiple create actions.
+- `useRef` lock is synchronous and protects the tiny timing window around state updates.
+
+**Where**
+- `src/components/events/create-event-dialog.tsx`
+
+## 2) Backend: dedupe check before insert + race-safe fallback
+
+**What changed**
+- Before insert, server action checks for a very recent existing event (same organizer + key fields) and returns that event if found.
+- On insert error, if Postgres returns unique violation (`23505`), server fetches matching existing event and returns success with existing ID.
+
+**Key match fields used for dedupe**
+- `organizer_id`
+- `title` (trimmed in action)
+- `event_type`
+- `start_date`
+- `end_date`
+- `location` (trimmed, null-safe handling)
+
+**Why**
+- Eliminates duplicate creation from near-simultaneous requests.
+- Prevents user-facing failure in race scenarios by converting race collisions into idempotent success.
+
+**Where**
+- `src/app/dashboard/events/actions/index.ts`
+
+## 3) Database migration: hard uniqueness guarantee
+
+**What changed**
+- Added unique index migration to enforce one logical event per organizer+payload.
+
+**Migration file**
+- `supabase/migrations/20260214_prevent_duplicate_events.sql`
+
+**SQL used**
+```sql
+-- Prevent accidental duplicate event creation for the same organizer.
+-- Treats case and NULL/empty location consistently.
+CREATE UNIQUE INDEX IF NOT EXISTS events_dedupe_unique_idx ON events (
+    organizer_id,
+    lower(title),
+    event_type,
+    start_date,
+    end_date,
+    lower(coalesce(location, ''))
+);
+```
+
+**Why this shape**
+- `lower(title)` avoids duplicates differing only by text case.
+- `lower(coalesce(location, ''))` treats `NULL` and empty location consistently.
+- `IF NOT EXISTS` makes migration re-runnable safely.
+
+## 4) How to apply this migration to an existing Supabase project
+
+This repository’s standard setup flow uses Supabase SQL Editor.
+
+### Step A — Pre-check duplicates (recommended)
+
+```sql
+select organizer_id, lower(title), event_type, start_date, end_date, lower(coalesce(location,'')), count(*)
+from events
+group by 1,2,3,4,5,6
+having count(*) > 1;
+```
+
+If no rows return, proceed to Step B.
+
+### Step B — Run migration SQL
+
+Run contents of `supabase/migrations/20260214_prevent_duplicate_events.sql` in Supabase SQL Editor.
+
+### Step C — Verify index exists
+
+```sql
+select indexname
+from pg_indexes
+where tablename = 'events'
+  and indexname = 'events_dedupe_unique_idx';
+```
+
+### Step D — If Step B fails due to existing duplicates
+
+Clean duplicates (keep newest per logical event), then rerun Step B:
+
+```sql
+delete from events e
+using (
+  select id from (
+    select id, row_number() over (
+      partition by organizer_id, lower(title), event_type, start_date, end_date, lower(coalesce(location,''))
+      order by created_at desc, id desc
+    ) as rn
+    from events
+  ) t where rn > 1
+) d
+where e.id = d.id;
+```
+
+## 5) Net result
+
+- Double-tap on Create Event no longer creates duplicate rows.
+- Concurrency races are handled gracefully.
+
+---
+
+# Session 12 — Safer Event Deletion (Accidental Delete Protection)
+
+This session improves organizer safety around event deletion. The previous flow used a single click + browser confirm, which was easy to trigger unintentionally.
+
+## Problem statement
+
+**Symptom**
+- Organizers could accidentally delete an event from a simple destructive button flow.
+
+**Risk**
+- Event deletion is high-impact and hard to recover from.
+- A single lightweight confirmation (`window.confirm`) is not strong enough protection for destructive actions.
+
+## New deletion pattern (multi-step confirmation)
+
+The delete flow is now intentionally friction-based:
+
+1) Open **3-dot actions menu**.
+2) Choose **Delete event**.
+3) See destructive warning dialog.
+4) Type `delete` in an input field.
+5) Final **Delete permanently** button enables only when typed text matches.
+
+This combines intent confirmation + explicit user action before submitting the server action.
+
+## What changed
+
+### 1) Replaced inline delete button with actions menu
+- Added a compact 3-dot trigger using existing dropdown primitives.
+- Moved delete into a contextual menu item (`Delete event`).
+
+### 2) Replaced `window.confirm` with custom destructive dialog
+- Added a dedicated modal with stronger warning copy.
+- Shows that deletion is irreversible and may remove related event data.
+
+### 3) Added typed keyword confirmation gate
+- User must type `delete` (case-insensitive) to unlock final submit.
+- Prevents reflexive confirmation clicks.
+
+### 4) Added event title context inside dialog
+- The modal displays the current event title to reduce “wrong record” deletion mistakes.
+
+## Why this is better than the old approach
+
+- **Higher intent assurance:** requires explicit typed input, not just quick click-through.
+- **Lower accidental activation:** delete action is no longer a primary visible button.
+- **Context-aware safety:** event title in modal helps users verify they are deleting the intended event.
+- **No backend contract change needed:** still uses existing server action (`deleteEvent`) with stronger frontend guardrails.
+
+## Where
+
+- `src/components/events/delete-event-form.tsx`
+  - Reworked to use dropdown menu + dialog + typed confirmation gate.
+- `src/app/dashboard/events/[id]/layout.tsx`
+  - Passes `eventTitle` into delete component for contextual confirmation.
+
+## Net result
+
+- Accidental organizer deletions are significantly less likely.
+- Intentional deletion remains available but now requires deliberate confirmation behavior.
+- Database enforces final correctness even if client/server race paths occur.
+
+---
+
+# Session 13 — Public Landing + Hero/Footer + Navigation/UX Pass (Detailed)
+
+This session focused on the public-facing experience (especially for logged-out users), anchor scrolling behavior, hero/footer polish, dashboard nav toggles, and image delivery optimization.
+
+## 1) Public events should be visible without login
+
+### Symptom
+- On landing page, clicking **View event** forced `/login` every time.
+- Users could not inspect basic public event details unless authenticated.
+
+### Root cause
+- Landing event card CTA was hard-wired to `/login?next=/events/:id`.
+
+### Fix
+- Replaced login redirect behavior with in-page event details interaction.
+- Public cards always show basic event metadata (title/type/date/location/capacity).
+- Description is hidden by default and shown only when explicitly requested.
+
+### Files
+- `src/app/page.tsx`
+- `src/components/app/public-events-section.tsx` (new)
+
+---
+
+## 2) Split landing events into Upcoming/Past with 3-item preview + view-all
+
+### Requirement
+- Separate upcoming and past events.
+- Show only 3 items by default in each section.
+- Show “view all” only if section has more than 3.
+
+### Fix
+- Added two grouped lists:
+  - **Upcoming events**
+  - **Past events**
+- Added section-local toggles:
+  - `View all ...` / `Show less`
+- Kept default preview at 3 cards per section.
+
+### Files
+- `src/components/app/public-events-section.tsx`
+
+---
+
+## 3) Hydration mismatch fix (date rendering)
+
+### Symptom
+- React hydration warning on landing events:
+  - server/client date text mismatch (locale differences like `2/6/2026` vs `6/2/2026`).
+
+### Root cause
+- `toLocaleDateString()` inside a client-rendered path produced locale-dependent output.
+
+### Fix
+- Replaced locale-dependent formatting with deterministic formatter (`DD/MM/YYYY`).
+- Passed server snapshot (`todayIso`) to client component for stable section grouping at hydration time.
+
+### Files
+- `src/components/app/public-events-section.tsx`
+- `src/app/page.tsx`
+
+---
+
+## 4) “View event” should open popup modal (not inline slide-down)
+
+### Requirement
+- Open selected event in a big popup with blurred background.
+- Keep description in popup view.
+
+### Fix
+- Replaced inline expansion with dialog modal flow:
+  - selected event state
+  - centered dialog
+  - blurred backdrop
+- Added explicit **Description** label in event modal content.
+
+### Supporting change
+- Extended shared `DialogContent` to accept `overlayClassName` for controlled overlay styling.
+
+### Files
+- `src/components/app/public-events-section.tsx`
+- `src/components/ui/dialog.tsx`
+
+---
+
+## 5) Hash links should smooth-scroll on same page (no route-like jump)
+
+### Symptom
+- `Events` / `Browse Events` / `Features` felt like redirect/jump behavior.
+
+### Root cause
+- Hash targets + link wrappers were mixed; one button wrapped inside anchor created invalid structure.
+- Smooth scroll rule was accidentally placed inside `:root` block (ineffective).
+
+### Fix
+- Switched landing hash navigation to plain anchors for in-page sections.
+- Used valid `Button asChild` anchor markup.
+- Moved smooth-scroll CSS to top-level `html { scroll-behavior: smooth; }`.
+
+### Files
+- `src/app/page.tsx`
+- `src/app/globals.css`
+
+---
+
+## 6) Section targeting fixes + Contact nav
+
+### Symptom
+- `Events` sometimes landed where past list was more visible first.
+
+### Fix
+- Created explicit section target for upcoming list: `#upcoming-events`.
+- Updated top-nav + CTA links to that anchor.
+- Added top nav **Contact** link and anchored footer as `#contact`.
+- Added scroll offsets (`scroll-mt-24`) to avoid fixed-header overlap.
+
+### Files
+- `src/app/page.tsx`
+- `src/components/app/public-events-section.tsx`
+- `src/components/app/landing-ui-preview.tsx`
+- `src/components/app/site-footer.tsx`
+
+---
+
+## 7) Footer redesign pass (spacing, hierarchy, links)
+
+### Requirement
+- Footer looked cramped/bland and needed cleaner visual structure.
+
+### Fixes applied iteratively
+- Increased spacing and visual rhythm.
+- Improved typography hierarchy and grouping.
+- Added gradient/surface treatment and border consistency.
+- Refined links and contact sections.
+- Added contribution callout:
+  - **Open for contribution** + GitHub link.
+- Added icons:
+  - GitHub icon
+  - Email icons
+- Added `Features` in links section.
+- Later adjusted links to vertical stack and removed GitHub from links list (kept contribution callout link).
+
+### Files
+- `src/components/app/site-footer.tsx`
+
+---
+
+## 8) Footer image blending
+
+### Requirement
+- Use AI-generated image in footer background, blurred and blended.
+
+### Fixes
+- Copied asset into public path:
+  - `public/footer bg.png`
+- Added layered footer background system:
+  - background image layer
+  - gradient readability overlay
+  - foreground content surface
+- Tuned opacity/blur/position multiple times based on visual feedback to improve visibility.
+
+### Files
+- `public/footer bg.png`
+- `src/components/app/site-footer.tsx`
+
+---
+
+## 9) “Mock Dashboard” messaging clarity in hero preview
+
+### Requirement evolution
+- Explicitly communicate preview is mock/sample data.
+- Copy and placement iterated for readability.
+
+### Finalized copy/layout
+- Heading: **Mock Dashboards***
+- Subtitle: **This is how it would look once you get started!!**
+- Subtle note: **\*This is sample data**
+- Subtitle centered under heading; sample-data note positioned to the right between heading block and view switch.
+
+### Files
+- `src/components/app/landing-ui-preview.tsx`
+
+---
+
+## 10) Hero image treatment from public asset
+
+### Requirement
+- Use hero image from `public` and match blended cinematic look.
+
+### Fix
+- Hero now uses full-bleed `next/image` background (`/Hero image.png`) with layered overlays and text-on-image contrast.
+
+### Later tuning
+- Reduced overlay darkness after feedback so image remains visible (not over-tinted).
+
+### Files
+- `src/app/page.tsx`
+
+---
+
+## 11) Header blend over hero + scroll-based opacity behavior
+
+### Requirement
+- Header should blend with hero at top.
+- On scroll, header should retain stronger translucent/background-tinted behavior.
+
+### Fix
+- Introduced client landing header with scroll state:
+  - at top: light blue-tinted translucent glass
+  - after scroll threshold: stronger translucent background tint
+- Added nav/button interaction polish (hover + active states), excluding theme switch.
+
+### Files
+- `src/components/app/landing-header.tsx` (new)
+- `src/app/page.tsx`
+
+---
+
+## 12) Dashboard 3-bar toggle behavior (desktop + mobile)
+
+### Requirement
+- Add sidebar open/close 3-bar on desktop too.
+- Verify mobile already has it.
+
+### Findings
+- Mobile already had hamburger (`MobileNav`) and was kept.
+- Desktop initially got a separate top menu bar, which was rejected.
+
+### Final fix
+- Added sidebar-close hamburger inside desktop side panel itself.
+- Added compact reopen hamburger in main area only when sidebar is collapsed.
+- Removed separate desktop “Menu” top header row.
+
+### Files
+- `src/components/dashboard/responsive-dashboard-frame.tsx` (new)
+- `src/app/dashboard/layout.tsx` (switched to responsive frame)
+
+---
+
+## 13) Image configuration optimization (requested as image-only pass)
+
+### Requirement
+- Apply image optimization config only (no extra UX changes).
+
+### Fix
+- Added Next.js image optimization config:
+  - AVIF/WebP output formats
+  - tuned `deviceSizes`
+  - `imageSizes`
+  - `minimumCacheTTL`
+- Kept hero `sizes` explicitly responsive.
+
+### Files
+- `next.config.ts`
+- `src/app/page.tsx`
+
+---
+
+## 14) Vercel production build error on dashboard entries page
+
+### Symptom
+- Vercel build failed during `next build` / TypeScript check with:
+  - `TS2352: Conversion of type ... to type 'ApprovedEvent[]' may be a mistake...`
+- Failure location:
+  - `src/app/dashboard/entries/page.tsx` (around approved events mapping)
+
+### Root cause
+- Code assumed joined Supabase relation data from `event_applications.events` could be directly cast as `ApprovedEvent[]`.
+- In practice, relation payload shape can be `object | object[] | null` depending on select shape/inference.
+- The direct cast (`as ApprovedEvent[]`) bypassed safe narrowing and failed strict production type checks.
+
+### Fix
+- Removed unsafe direct cast.
+- Added a runtime-safe normalization path:
+  - flatten relation values whether single object or array
+  - filter with explicit type guard `isApprovedEvent(...)`
+- Result: `approvedEvents` is now constructed as truly narrowed `ApprovedEvent[]`.
+
+### Why this is correct
+- Handles real-world relation shape variance safely.
+- Satisfies strict TypeScript checks without weakening types.
+- Prevents runtime surprises from malformed/null relation values.
+
+### Files
+- `src/app/dashboard/entries/page.tsx`
+
+### Verification
+- VS Code diagnostics now report no errors for `src/app/dashboard/entries/page.tsx`.
+- This addresses the exact Vercel compile-time blocker shown in deployment logs.
+
+---
+
+## Final status for this session
+
+- Public landing now supports full event discovery without forced login.
+- Event details open in modal with blur backdrop.
+- Anchors scroll smoothly and land on intended sections.
+- Hero/header/footer are visually blended and interaction-polished.
+- Footer includes contribution/contact enhancements and blended background image.
+- Dashboard desktop + mobile both provide 3-bar navigation toggles.
+- Next image pipeline is configured for better mobile delivery.
+- Vercel TypeScript build blocker on coach entries is resolved with safe relation normalization.
+
+---
+
+# Session 15 — Student Portal Integration & Landing UI Polish
+
+This session focused on blending the hosted Student Profile Portal into EntryDesk’s public landing experience without breaking existing layout rhythm.
+
+## 1) Integrate Testlist portal into landing flow
+
+### Requirement
+- Expose hosted student portal (`testlist.shorinkai.in`) inside EntryDesk landing experience.
+- Add link in header/title bar and include clear explanatory content on page.
+
+### Fix
+- Added top-nav external link: **Student Portal**.
+- Added a dedicated landing section for student-portal context + CTA.
+
+### Files
+- `src/components/app/landing-header.tsx`
+- `src/app/page.tsx`
+- `src/components/app/student-portal-section.tsx` (new)
+
+---
+
+## 2) Section content/layout refinement after visual feedback
+
+### Symptom
+- Initial integration left visible empty space and secondary CTA noise.
+- “Continue in EntryDesk” CTA was unnecessary in that block.
+
+### Root cause
+- Right-side panel was too text-heavy and under-utilized visually.
+- Section hierarchy did not match surrounding “showcase” style.
+
+### Fix
+- Removed “Continue in EntryDesk” button.
+- Added heading + supporting line above section for better narrative flow.
+- Replaced static snapshot text block with a compact **mock student profile UI** (identity card, belt badge, stats, competition history snippet).
+
+### Files
+- `src/components/app/student-portal-section.tsx`
+
+---
+
+## 3) Visual cleanup: too many border lines + accent overpowering content
+
+### Symptom
+- Preview looked overly outlined/“wireframe”.
+- Green accent strip visually overpowered content and appeared to override avatar `A` tile.
+
+### Root cause
+- Excessive border usage on nested containers/tiles.
+- Accent strip intensity + stacking made the avatar overlap feel visually incorrect.
+
+### Fix
+- Reduced border noise by switching multiple blocks to soft surfaces/rings.
+- Toned accent to a muted gradient and reduced height.
+- Fixed avatar overlap using explicit stacking and surface:
+  - avatar tile now uses `z-10`
+  - solid `bg-card` tile surface
+  - adjusted top spacing (`pt-5`) and overlap depth (`-top-5`)
+
+### Why this is correct
+- Keeps brand accent while avoiding color dominance.
+- Preserves readability and hierarchy in dark mode.
+- Eliminates the “accent overriding avatar” visual artifact.
+
+### Files
+- `src/components/app/student-portal-section.tsx`
+
+---
+
+## Verification
+
+- Diagnostics check completed for all touched files:
+  - `src/app/page.tsx`
+  - `src/components/app/landing-header.tsx`
+  - `src/components/app/student-portal-section.tsx`
+- Result: **No errors found**.

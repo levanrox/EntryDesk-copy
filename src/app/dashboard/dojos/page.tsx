@@ -4,16 +4,29 @@ import { Plus, LayoutGrid, Users } from 'lucide-react'
 import { DojoDialog } from '@/components/dojos/dojo-dialog'
 import { DojoActions } from '@/components/dojos/dojo-actions'
 import { DashboardPageHeader } from '@/components/dashboard/page-header'
+import { PaginationControls } from '@/components/ui/pagination-controls'
 
-export default async function DojosPage() {
+export default async function DojosPage({
+    searchParams,
+}: {
+    searchParams?: Promise<{ page?: string }>
+}) {
     const { supabase, user } = await requireRole('coach', { redirectTo: '/dashboard' })
+    const sp = await searchParams
+    const page = Math.max(1, Number(sp?.page) || 1)
+    const limit = 50
+    const from = (page - 1) * limit
+    const to = from + limit - 1
 
     // Fetch coach's dojos with student count
-    const { data: dojos } = await supabase
+    const { data: dojos, count } = await supabase
         .from('dojos')
-        .select('*, students(count)')
+        .select('*, students(count)', { count: 'exact' })
         .eq('coach_id', user.id)
         .order('created_at', { ascending: false })
+        .range(from, to)
+
+    const totalPages = Math.ceil((count ?? 0) / limit)
 
     return (
         <div className="space-y-4">
@@ -34,7 +47,7 @@ export default async function DojosPage() {
                     dojos.map((dojo) => (
                         <div
                             key={dojo.id}
-                            className="group rounded-2xl border border-black/5 bg-gradient-to-b from-background/95 to-background/70 p-3 shadow-[0_12px_30px_-22px_rgba(0,0,0,0.25)] transition-colors hover:bg-background/80 dark:border-white/10 dark:bg-background/40 dark:from-background/60 dark:to-background/30 dark:shadow-black/40"
+                            className="dashboard-surface dashboard-list-item group p-3"
                         >
                             <div className="flex items-start justify-between gap-2">
                                 <div className="flex items-center gap-2">
@@ -55,7 +68,7 @@ export default async function DojosPage() {
                         </div>
                     ))
                 ) : (
-                    <div className="col-span-full rounded-2xl border border-dashed border-black/10 bg-muted/20 py-8 text-center dark:border-white/10">
+                    <div className="dashboard-empty col-span-full py-8 text-center">
                         <LayoutGrid className="mx-auto mb-2 h-6 w-6 text-muted-foreground" />
                         <p className="text-sm font-medium text-foreground">No dojos yet</p>
                         <p className="mt-1 text-xs text-muted-foreground">Create your first dojo to start adding students.</p>
@@ -69,6 +82,8 @@ export default async function DojosPage() {
                     </div>
                 )}
             </div>
+
+            <PaginationControls page={page} totalPages={totalPages} totalCount={count ?? 0} />
         </div>
     )
 }

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getUserProfile } from '@/lib/auth/require-role'
 import { DashboardPageHeader } from '@/components/dashboard/page-header'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
@@ -6,124 +6,155 @@ import { ArrowRight, Calendar, Users, ClipboardList, LayoutGrid, CheckSquare, Fo
 import { Badge } from '@/components/ui/badge'
 import { ApplyButton } from '@/components/events/apply-button'
 
+type PublicEvent = {
+    id: string
+    title: string
+    start_date: string
+    end_date: string
+    location: string | null
+    event_type: string | null
+    is_public: boolean
+}
+
+type ApprovedEvent = {
+    id: string
+    title: string
+    start_date: string
+    end_date: string
+    location: string | null
+    event_type: string | null
+}
+
+type ApprovedApplication = {
+    event_id: string
+    status: string
+    events: ApprovedEvent[] | null
+}
+
+type OrganizerEvent = {
+    id: string
+    title: string
+    start_date: string
+    end_date: string
+    location: string | null
+    event_type: string | null
+}
+
 export default async function DashboardPage() {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
+    const { supabase, user, profile, role } = await getUserProfile()
 
-    if (!user) return null
-
-    const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-
-    const role = profile?.role || 'coach'
     const name = profile?.full_name || user.email
-
-
     const isOrganizer = role === 'organizer'
 
     const today = new Date().toISOString().slice(0, 10)
 
-    const { count: eventsCount } = isOrganizer
-        ? await supabase
+    let eventsCount = 0
+    let pendingApprovalsCount = 0
+    let dojosCount = 0
+    let studentsCount = 0
+    let entriesCount = 0
+    let organizerActiveEvents: OrganizerEvent[] = []
+    let publicEvents: PublicEvent[] = []
+    let applications: Array<{ event_id: string; status: string }> = []
+    let approvedApplications: ApprovedApplication[] = []
+
+    if (isOrganizer) {
+        const { data: organizerEventIds } = await supabase
             .from('events')
-            .select('id', { count: 'exact', head: true })
+            .select('id')
             .eq('organizer_id', user.id)
-        : { count: 0 }
 
-    const { data: organizerEventIds } = isOrganizer
-        ? await supabase.from('events').select('id').eq('organizer_id', user.id)
-        : { data: [] as Array<{ id: string }> }
+        const myEventIds = (organizerEventIds ?? []).map((e) => e.id)
+        eventsCount = myEventIds.length
 
-    const myEventIds = (organizerEventIds ?? []).map((e) => e.id)
-
-    const { count: pendingApprovalsCount } = isOrganizer && myEventIds.length
-        ? await supabase
-            .from('event_applications')
-            .select('id', { count: 'exact', head: true })
-            .in('event_id', myEventIds)
-            .eq('status', 'pending')
-        : { count: 0 }
-
-    const { count: dojosCount } = !isOrganizer
-        ? await supabase
-            .from('dojos')
-            .select('id', { count: 'exact', head: true })
-            .eq('coach_id', user.id)
-        : { count: 0 }
-
-    const { data: dojoIds } = !isOrganizer
-        ? await supabase.from('dojos').select('id').eq('coach_id', user.id)
-        : { data: [] as Array<{ id: string }> }
-
-    const myDojoIds = (dojoIds ?? []).map((d) => d.id)
-
-    const { count: studentsCount } = !isOrganizer && myDojoIds.length
-        ? await supabase
-            .from('students')
-            .select('id', { count: 'exact', head: true })
-            .in('dojo_id', myDojoIds)
-        : { count: 0 }
-
-    const { count: entriesCount } = !isOrganizer
-        ? await supabase
-            .from('entries')
-            .select('id', { count: 'exact', head: true })
-            .eq('coach_id', user.id)
-        : { count: 0 }
-
-    // Fetch Public events for Coach
-    const { data: publicEvents } = !isOrganizer
-        ? await supabase
+        const { data: activeOrganizerEvents } = await supabase
             .from('events')
-            .select('*')
-            .eq('is_public', true)
+            .select('id, title, start_date, end_date, location, event_type')
+            .eq('organizer_id', user.id)
+            .gte('end_date', today)
             .order('start_date', { ascending: true })
-        : { data: [] }
 
-    // Fetch Applications for Coach
-    const { data: applications } = !isOrganizer && user
-        ? await supabase
-            .from('event_applications')
-            .select('event_id, status')
+        organizerActiveEvents = (activeOrganizerEvents ?? []) as OrganizerEvent[]
+
+        if (myEventIds.length) {
+            const [{ count: pendingCount }] = await Promise.all([
+                supabase
+                    .from('event_applications')
+                    .select('id', { count: 'exact', head: true })
+                    .in('event_id', myEventIds)
+                    .eq('status', 'pending'),
+            ])
+            pendingApprovalsCount = pendingCount ?? 0
+        }
+    } else {
+        const { data: dojoIds } = await supabase
+            .from('dojos')
+            .select('id')
             .eq('coach_id', user.id)
-        : { data: [] }
 
-    const { data: approvedApplications } = !isOrganizer && user
-        ? await supabase
-            .from('event_applications')
-            .select(`
-                event_id,
-                status,
-                events (
-                    id,
-                    title,
-                    start_date,
-                    end_date,
-                    location,
-                    event_type
-                )
-            `)
-            .eq('coach_id', user.id)
-            .eq('status', 'approved')
-        : { data: [] }
+        const myDojoIds = (dojoIds ?? []).map((d) => d.id)
+        dojosCount = myDojoIds.length
 
-    const appMap = new Map()
+        type CountResult = { count: number | null }
+        const noCount: CountResult = { count: 0 }
+
+        const [entriesRes, publicEventsRes, applicationsRes, approvedAppsRes, studentsRes] = await Promise.all([
+            supabase
+                .from('entries')
+                .select('id', { count: 'exact', head: true })
+                .eq('coach_id', user.id),
+            supabase
+                .from('events')
+                .select('id, title, start_date, end_date, location, event_type, is_public')
+                .eq('is_public', true)
+                .order('start_date', { ascending: true }),
+            supabase
+                .from('event_applications')
+                .select('event_id, status')
+                .eq('coach_id', user.id),
+            supabase
+                .from('event_applications')
+                .select(`
+                    event_id,
+                    status,
+                    events (
+                        id,
+                        title,
+                        start_date,
+                        end_date,
+                        location,
+                        event_type
+                    )
+                `)
+                .eq('coach_id', user.id)
+                .eq('status', 'approved'),
+            myDojoIds.length
+                ? supabase
+                    .from('students')
+                    .select('id', { count: 'exact', head: true })
+                    .in('dojo_id', myDojoIds)
+                : Promise.resolve(noCount),
+        ])
+
+        entriesCount = entriesRes.count ?? 0
+        publicEvents = ((publicEventsRes.data ?? []) as PublicEvent[])
+        applications = ((applicationsRes.data ?? []) as Array<{ event_id: string; status: string }>)
+        approvedApplications = ((approvedAppsRes.data ?? []) as ApprovedApplication[])
+        studentsCount = (studentsRes as CountResult).count ?? 0
+    }
+
+    const appMap = new Map<string, string>()
     applications?.forEach(app => {
         appMap.set(app.event_id, app.status)
     })
 
     const approvedEvents = (approvedApplications ?? [])
-        // @ts-ignore
-        .map((app) => app.events)
-        // @ts-ignore
-        .filter((event) => event && event.end_date >= today)
+        .flatMap((app) => app.events || [])
+        .filter((event): event is ApprovedEvent => !!event && event.end_date >= today)
 
     const activePublicEvents = (publicEvents ?? [])
-        .filter((event: any) => event.end_date >= today)
-        .filter((event: any) => appMap.get(event.id) !== 'approved')
+        .filter((event) => event.end_date >= today)
+        .filter((event) => appMap.get(event.id) !== 'approved')
 
     const getStatusIcon = (status: string | undefined) => {
         if (status === 'approved') return <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-500" />
@@ -156,13 +187,13 @@ export default async function DashboardPage() {
             />
 
             {/* Bento Grid Metrics */}
-            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 lg:items-start">
                 {isOrganizer ? (
                     <>
                         {/* Events Tile */}
                         <Link
                             href="/dashboard/events"
-                            className="group relative overflow-hidden rounded-2xl border border-black/5 bg-gradient-to-b from-background/95 to-background/60 p-6 shadow-[0_12px_30px_-22px_rgba(0,0,0,0.25)] transition-all hover:bg-background/80 hover:shadow-[0_18px_40px_-26px_rgba(0,0,0,0.30)] hover:-translate-y-1 dark:border-white/10 dark:bg-background/40 dark:from-background/60 dark:to-background/30 dark:shadow-black/40"
+                            className="group relative overflow-hidden rounded-2xl border border-black/5 bg-gradient-to-b from-background/95 to-background/60 p-5 shadow-[0_12px_30px_-22px_rgba(0,0,0,0.25)] transition-all hover:bg-background/80 hover:shadow-[0_18px_40px_-26px_rgba(0,0,0,0.30)] hover:-translate-y-1 dark:border-white/10 dark:bg-background/40 dark:from-background/60 dark:to-background/30 dark:shadow-black/40"
                         >
                             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                                 <Calendar className="h-24 w-24" />
@@ -182,7 +213,7 @@ export default async function DashboardPage() {
                         {/* Pending Approvals Tile */}
                         <Link
                             href="/dashboard/approvals"
-                            className="group relative overflow-hidden rounded-2xl border border-black/5 bg-gradient-to-b from-background/95 to-background/60 p-6 shadow-[0_12px_30px_-22px_rgba(0,0,0,0.25)] transition-all hover:bg-background/80 hover:shadow-[0_18px_40px_-26px_rgba(0,0,0,0.30)] hover:-translate-y-1 dark:border-white/10 dark:bg-background/40 dark:from-background/60 dark:to-background/30 dark:shadow-black/40"
+                            className="group relative overflow-hidden rounded-2xl border border-black/5 bg-gradient-to-b from-background/95 to-background/60 p-5 shadow-[0_12px_30px_-22px_rgba(0,0,0,0.25)] transition-all hover:bg-background/80 hover:shadow-[0_18px_40px_-26px_rgba(0,0,0,0.30)] hover:-translate-y-1 dark:border-white/10 dark:bg-background/40 dark:from-background/60 dark:to-background/30 dark:shadow-black/40"
                         >
                             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                                 <CheckSquare className="h-24 w-24" />
@@ -207,33 +238,33 @@ export default async function DashboardPage() {
                         </Link>
 
                         {/* Quick Actions - spans 2 cols */}
-                        <div className="col-span-1 sm:col-span-2 rounded-2xl border border-black/10 bg-gradient-to-b from-background/90 to-background/50 p-6 backdrop-blur-sm shadow-md shadow-black/5 dark:border-white/10 dark:shadow-black/40">
-                            <div className="flex items-center gap-3 text-muted-foreground mb-6">
-                                <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500">
+                        <div className="group relative col-span-1 overflow-hidden rounded-2xl border border-black/5 bg-gradient-to-b from-background/95 to-background/60 p-4 shadow-[0_12px_30px_-22px_rgba(0,0,0,0.25)] sm:col-span-2 dark:border-white/10 dark:bg-background/40 dark:from-background/60 dark:to-background/30 dark:shadow-black/40">
+                            <div className="mb-3 flex items-center gap-2.5 text-muted-foreground">
+                                <div className="rounded-lg bg-primary/10 p-2 text-primary">
                                     <ListTodo className="h-4 w-4" />
                                 </div>
                                 <span className="text-xs font-semibold uppercase tracking-wider">Quick Actions</span>
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <Link href="/dashboard/events">
-                                    <div className="flex items-center gap-3 p-3 rounded-xl border border-black/10 bg-white/5 shadow-sm shadow-black/5 hover:bg-primary/5 hover:border-primary/20 transition-colors group cursor-pointer dark:border-white/10 dark:shadow-black/40">
-                                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <Link href="/dashboard/events" className="h-full">
+                                    <div className="dashboard-list-item flex h-[92px] items-center gap-3 rounded-xl bg-background/30 p-3.5 transition-colors hover:bg-background/50 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]">
+                                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary">
                                             <Calendar className="h-4 w-4" />
                                         </div>
                                         <div>
-                                            <div className="font-medium text-sm text-foreground">Create Event</div>
-                                            <div className="text-xs text-muted-foreground">Start a new tournament</div>
+                                            <div className="text-sm font-medium text-foreground">Create Event</div>
+                                            <div className="text-xs text-muted-foreground leading-tight">Start a new tournament</div>
                                         </div>
                                     </div>
                                 </Link>
-                                <Link href="/dashboard/approvals">
-                                    <div className="flex items-center gap-3 p-3 rounded-xl border border-black/10 bg-white/5 shadow-sm shadow-black/5 hover:bg-orange-500/5 hover:border-orange-500/20 transition-colors group cursor-pointer dark:border-white/10 dark:shadow-black/40">
-                                        <div className="h-8 w-8 rounded-full bg-orange-500/10 flex items-center justify-center text-orange-500 group-hover:scale-110 transition-transform">
+                                <Link href="/dashboard/approvals" className="h-full">
+                                    <div className="dashboard-list-item flex h-[92px] items-center gap-3 rounded-xl bg-background/30 p-3.5 transition-colors hover:bg-background/50 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]">
+                                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-500/10 text-orange-500">
                                             <CheckSquare className="h-4 w-4" />
                                         </div>
                                         <div>
-                                            <div className="font-medium text-sm text-foreground">Review Queue</div>
-                                            <div className="text-xs text-muted-foreground">Process applications</div>
+                                            <div className="text-sm font-medium text-foreground">Review Queue</div>
+                                            <div className="text-xs text-muted-foreground leading-tight">Process applications</div>
                                         </div>
                                     </div>
                                 </Link>
@@ -331,6 +362,65 @@ export default async function DashboardPage() {
                 )}
             </div>
 
+            {isOrganizer && (
+                <div className="space-y-4 pt-2">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                            <div className="rounded-lg bg-primary/10 p-2 text-primary">
+                                <Calendar className="h-4 w-4" />
+                            </div>
+                            <h2 className="text-lg font-semibold tracking-tight">Your Active Events</h2>
+                        </div>
+                    </div>
+
+                    <div className="dashboard-surface">
+                        {organizerActiveEvents.length > 0 ? (
+                            <div className="dashboard-list">
+                                {organizerActiveEvents.map((event) => (
+                                    <Link
+                                        key={event.id}
+                                        href={`/dashboard/events/${event.id}`}
+                                        className="dashboard-list-item block p-4"
+                                    >
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="truncate text-sm font-medium">{event.title}</span>
+                                                    {event.event_type ? (
+                                                        <Badge className="px-1.5 py-0 text-[10px] capitalize" variant="secondary">
+                                                            {event.event_type}
+                                                        </Badge>
+                                                    ) : null}
+                                                </div>
+                                                <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
+                                                    <span>{new Date(event.start_date).toLocaleDateString()} – {new Date(event.end_date).toLocaleDateString()}</span>
+                                                    {event.location ? (
+                                                        <>
+                                                            <span>•</span>
+                                                            <span className="flex items-center gap-0.5">
+                                                                <MapPin className="h-2.5 w-2.5" />
+                                                                {event.location}
+                                                            </span>
+                                                        </>
+                                                    ) : null}
+                                                </div>
+                                            </div>
+                                            <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                        </div>
+                                    </Link>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="py-8 text-center">
+                                <Calendar className="mx-auto mb-2 h-6 w-6 text-muted-foreground" />
+                                <p className="text-sm font-medium">No active events</p>
+                                <p className="mt-1 text-xs text-muted-foreground">Create an event to see it here.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {/* Coach: Approved + Active Events (home) */}
             {!isOrganizer && (
                 <div className="pt-4 space-y-8">
@@ -347,16 +437,16 @@ export default async function DashboardPage() {
                             </Button>
                         </div>
 
-                        <div className="rounded-2xl border border-black/5 bg-gradient-to-b from-background/95 to-background/70 shadow-[0_12px_30px_-22px_rgba(0,0,0,0.25)] dark:border-white/10 dark:bg-background/40 dark:from-background/60 dark:to-background/30 dark:shadow-black/40">
+                        <div className="dashboard-surface">
                             {/* @ts-ignore */}
                             {approvedEvents.length > 0 ? (
-                                <div className="divide-y divide-border">
+                                <div className="dashboard-list">
                                     {/* @ts-ignore */}
                                     {approvedEvents.map((event: any) => (
                                         <Link
                                             key={event.id}
                                             href={`/dashboard/entries/${event.id}`}
-                                            className="group flex items-center justify-between gap-4 p-3 transition-colors hover:bg-muted/50"
+                                            className="dashboard-list-item group flex items-center justify-between gap-4 p-3"
                                         >
                                             <div className="flex items-center gap-3 min-w-0">
                                                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-emerald-100 dark:bg-emerald-950">

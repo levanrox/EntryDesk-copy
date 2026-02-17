@@ -1,9 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { cache } from 'react'
 
 export type UserRole = 'organizer' | 'coach' | 'admin'
 
-export async function getUserProfile() {
+export const getUserProfile = cache(async () => {
     const supabase = await createClient()
     const {
         data: { user },
@@ -61,7 +62,7 @@ export async function getUserProfile() {
     const role = (profile?.role as UserRole) || 'coach'
 
     return { supabase, user, profile, role }
-}
+})
 
 export async function requireRole(
     allowed: UserRole | UserRole[],

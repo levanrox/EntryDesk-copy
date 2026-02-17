@@ -5,6 +5,7 @@ import { AppNavigationProvider } from "@/components/app/navigation-provider";
 import { Suspense } from "react";
 import { SiteFooterGate } from "@/components/app/site-footer-gate";
 import { ThemeScript } from "@/components/app/theme-script";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,6 +41,7 @@ export default function RootLayout({
             <SiteFooterGate />
           </AppNavigationProvider>
         </Suspense>
+        <SpeedInsights />
       </body>
     </html>
   );

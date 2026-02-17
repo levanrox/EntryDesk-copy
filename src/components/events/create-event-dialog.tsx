@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
     Dialog,
@@ -32,18 +32,25 @@ export function CreateEventDialog() {
     const [open, setOpen] = useState(false)
     const [date, setDate] = useState<{ from: Date; to: Date } | undefined>()
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const submitLockRef = useRef(false)
 
     const handleSubmit = async (formData: FormData) => {
+        if (submitLockRef.current || isSubmitting) {
+            return
+        }
+
         // Manually add dates if using a range picker
         // Simple implementation: two separate date inputs for now to be safe with standard form data
         // But let's use the formData directly if we use hidden inputs
         try {
+            submitLockRef.current = true
             setIsSubmitting(true)
             await createEvent(formData)
             setOpen(false)
         } catch (error) {
             alert('Failed to create event')
         } finally {
+            submitLockRef.current = false
             setIsSubmitting(false)
         }
     }

@@ -57,14 +57,14 @@ export function EntriesTable({ entries }: EntriesTableProps) {
     return (
         <div className="space-y-4">
             {selectedIds.size > 0 && (
-                <div className="bg-muted/50 p-2 rounded-lg flex items-center gap-4 border border-blue-100 bg-blue-50/50">
-                    <span className="text-sm font-medium pl-2">{selectedIds.size} selected</span>
+                <div className="flex items-center gap-4 rounded-full border border-white/[0.06] bg-muted/25 px-3 py-2">
+                    <span className="pl-2 text-sm font-medium">{selectedIds.size} selected</span>
                     <div className="flex gap-2">
-                        <Button size="sm" onClick={() => handleBulkUpdate('approved')} disabled={isBulkUpdating} className="bg-emerald-600 hover:bg-emerald-700">
+                        <Button size="sm" onClick={() => handleBulkUpdate('approved')} disabled={isBulkUpdating} className="rounded-full bg-emerald-600 hover:bg-emerald-700">
                             {isBulkUpdating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                             Approve Selected
                         </Button>
-                        <Button size="sm" variant="destructive" onClick={() => handleBulkUpdate('rejected')} disabled={isBulkUpdating}>
+                        <Button size="sm" variant="destructive" className="rounded-full" onClick={() => handleBulkUpdate('rejected')} disabled={isBulkUpdating}>
                             {isBulkUpdating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
                             Reject Selected
                         </Button>
@@ -72,10 +72,10 @@ export function EntriesTable({ entries }: EntriesTableProps) {
                 </div>
             )}
 
-            <div className="relative w-full overflow-auto border rounded-md">
+            <div className="relative w-full overflow-auto rounded-2xl border border-white/[0.06] bg-background/20 dark:bg-white/[0.02]">
                 <table className="w-full caption-bottom text-sm text-left">
-                    <thead className="[&_tr]:border-b bg-muted/40">
-                        <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                    <thead className="sticky top-0 z-10 bg-muted/35 backdrop-blur-sm [&_tr]:border-b">
+                        <tr className="border-b border-white/[0.06] transition-colors hover:bg-muted/45 data-[state=selected]:bg-muted">
                             <th className="h-12 px-4 align-middle w-[50px]">
                                 <Checkbox
                                     checked={allSelected}
@@ -104,7 +104,7 @@ export function EntriesTable({ entries }: EntriesTableProps) {
                                 </td>
                             </tr>
                         ) : entries.map((entry) => (
-                            <tr key={entry.id} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                            <tr key={entry.id} className="border-b border-white/[0.05] transition-colors hover:bg-muted/40 data-[state=selected]:bg-muted">
                                 <td className="p-4 align-middle">
                                     <Checkbox
                                         checked={selectedIds.has(entry.id)}
