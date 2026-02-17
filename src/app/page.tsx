@@ -79,7 +79,7 @@ export default async function LandingPage() {
 
             <StudentPortalSection />
 
-            <section className="mx-auto max-w-7xl px-6 pb-20 pt-4 md:px-8 xl:max-w-[95vw] xl:px-8">
+            <section className="w-full px-6 pb-20 pt-4 md:px-8">
                 <PublicEventsSection events={events ?? null} todayIso={todayIso} />
             </section>
         </div>

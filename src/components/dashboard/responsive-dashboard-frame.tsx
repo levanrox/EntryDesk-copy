@@ -16,7 +16,6 @@ import { cn } from '@/lib/utils'
 import { DashboardNavLink } from '@/components/dashboard/nav-link'
 import { SignOutForm } from '@/components/dashboard/signout-form'
 import { Badge } from '@/components/ui/badge'
-import { DashboardBackGate } from '@/components/dashboard/dashboard-back-gate'
 import { ThemeSwitch } from '@/components/app/theme-toggle'
 import { MobileNav } from '@/components/dashboard/mobile-nav'
 import { Button } from '@/components/ui/button'
@@ -51,7 +50,6 @@ export function ResponsiveDashboardFrame({
                         sidebarOpen ? 'w-72 opacity-100' : 'w-0 px-0 py-0 border-r-0 overflow-hidden opacity-0',
                     )}
                 >
-                    <DashboardBackGate />
                     <div className="flex items-center justify-between gap-3 mb-6">
                         <Link href="/dashboard" className="flex-1 rounded-xl px-2 py-1 transition-colors hover:bg-accent/30">
                             <div className="flex items-center gap-3">

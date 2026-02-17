@@ -66,7 +66,7 @@ export default async function LoginPage({
     return (
         <div className="min-h-screen bg-background">
             <header className="fixed inset-x-0 top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur dark:border-white/[0.08]">
-                <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-4 sm:px-6">
+                <div className="mx-auto flex h-16 w-full max-w-[1600px] items-center justify-between px-8">
                     <div className="flex items-center gap-3">
                         <HistoryBackIconButton fallbackHref="/" />
                         <Link href="/" className="flex items-center gap-2">
@@ -80,7 +80,7 @@ export default async function LoginPage({
                 </div>
             </header>
 
-            <main className="mx-auto grid w-full max-w-7xl gap-10 px-4 pb-16 pt-28 sm:px-6 lg:grid-cols-[1.1fr_460px] lg:items-start">
+            <main className="grid w-full max-w-[1600px] mx-auto gap-10 px-8 pb-16 pt-28 lg:grid-cols-[1.1fr_460px] lg:items-start">
                 <section>
                     <Badge variant="secondary" className="mb-5">Secure Access</Badge>
                     <h1 className="text-5xl font-bold tracking-tight md:text-6xl">Login or register</h1>
