@@ -16,7 +16,6 @@ import { cn } from '@/lib/utils'
 import { DashboardNavLink } from '@/components/dashboard/nav-link'
 import { SignOutForm } from '@/components/dashboard/signout-form'
 import { Badge } from '@/components/ui/badge'
-import { DashboardBackGate } from '@/components/dashboard/dashboard-back-gate'
 import { ThemeSwitch } from '@/components/app/theme-toggle'
 import { MobileNav } from '@/components/dashboard/mobile-nav'
 import { Button } from '@/components/ui/button'
@@ -44,14 +43,13 @@ export function ResponsiveDashboardFrame({
                 <div className="absolute left-0 bottom-0 -z-10 h-[300px] w-[300px] rounded-full bg-primary/5 blur-[100px]" />
             </div>
 
-            <div className="mx-auto flex min-h-screen w-full max-w-7xl">
+            <div className="flex min-h-screen w-full">
                 <aside
                     className={cn(
                         'hidden flex-col border-r bg-background/50 backdrop-blur-xl px-4 py-5 md:flex sticky top-0 h-screen transition-all duration-200',
                         sidebarOpen ? 'w-72 opacity-100' : 'w-0 px-0 py-0 border-r-0 overflow-hidden opacity-0',
                     )}
                 >
-                    <DashboardBackGate />
                     <div className="flex items-center justify-between gap-3 mb-6">
                         <Link href="/dashboard" className="flex-1 rounded-xl px-2 py-1 transition-colors hover:bg-accent/30">
                             <div className="flex items-center gap-3">
@@ -176,7 +174,7 @@ export function ResponsiveDashboardFrame({
                         </div>
                     </div>
 
-                    <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
+                    <main className="flex-1 px-2 py-6 sm:px-4 lg:px-6">
                         {!sidebarOpen ? (
                             <div className="mb-4 hidden md:flex">
                                 <Button
@@ -191,7 +189,7 @@ export function ResponsiveDashboardFrame({
                             </div>
                         ) : null}
 
-                        <div className={cn('mx-auto w-full relative', sidebarOpen ? 'max-w-6xl' : 'max-w-none')}>
+                        <div className="w-full relative">
                             {children}
                         </div>
                     </main>
