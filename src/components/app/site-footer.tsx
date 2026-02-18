@@ -23,7 +23,7 @@ export function SiteFooter() {
                         <div>
                             <div className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/30 px-3 py-1 text-xs font-medium text-muted-foreground dark:border-white/[0.12] dark:bg-white/[0.04]">
                                 <span className="relative h-3.5 w-3.5 overflow-hidden rounded-full">
-                                    <Image src="/favicon.ico" alt="EntryDesk logo" fill className="object-cover" sizes="14px" priority />
+                                    <Image src="/favicon.ico" alt="EntryDesk logo" fill className="object-cover" sizes="14px" />
                                 </span>
                                 <span>EntryDesk</span>
                             </div>
