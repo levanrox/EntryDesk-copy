@@ -32,6 +32,9 @@ function formatEventTypeLabel(eventType: string | null) {
 
     const normalized = eventType.trim().toLowerCase().replace(/[_-]+/g, ' ')
 
+    if (!normalized) {
+        return 'Tournament'
+    }
     if (normalized === 'test' || normalized === 'black belt test' || normalized === 'blackbelt test') {
         return 'Blackbelt Test'
     }
