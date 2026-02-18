@@ -17,12 +17,30 @@ type PublicEvent = {
     title: string
     event_type: string | null
     start_date: string
+    end_date?: string | null
     location: string | null
     max_participants: number | null
     description: string | null
 }
 
 const PREVIEW_COUNT = 3
+
+function formatEventTypeLabel(eventType: string | null) {
+    if (!eventType) {
+        return 'Tournament'
+    }
+
+    const normalized = eventType.trim().toLowerCase().replace(/[_-]+/g, ' ')
+
+    if (!normalized) {
+        return 'Tournament'
+    }
+    if (normalized === 'test' || normalized === 'black belt test' || normalized === 'blackbelt test') {
+        return 'Blackbelt Test'
+    }
+
+    return normalized.replace(/\b\w/g, (char) => char.toUpperCase())
+}
 
 export function PublicEventsSection({
     events,
@@ -36,15 +54,18 @@ export function PublicEventsSection({
     const [selectedEvent, setSelectedEvent] = useState<PublicEvent | null>(null)
 
     const { upcomingEvents, pastEvents } = useMemo(() => {
-        const today = `${todayIso}T00:00:00.000Z`
+        const today = todayIso
         const allEvents = events ?? []
 
+        const getEffectiveEndDate = (event: PublicEvent) => event.end_date || event.start_date
+        const toDateOnly = (dateValue: string) => dateValue.slice(0, 10)
+
         const upcoming = allEvents
-            .filter((event) => event.start_date >= today)
+            .filter((event) => toDateOnly(getEffectiveEndDate(event)) >= today)
             .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime())
 
         const past = allEvents
-            .filter((event) => event.start_date < today)
+            .filter((event) => toDateOnly(getEffectiveEndDate(event)) < today)
             .sort((a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime())
 
         return {
@@ -95,9 +116,7 @@ export function PublicEventsSection({
                             <DialogHeader>
                                 <DialogTitle className="pr-8 text-3xl font-bold tracking-tight">{selectedEvent.title}</DialogTitle>
                                 <DialogDescription className="text-sm">
-                                    {selectedEvent.event_type
-                                        ? selectedEvent.event_type.replace(/[_-]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
-                                        : 'Tournament'}
+                                    {formatEventTypeLabel(selectedEvent.event_type)}
                                 </DialogDescription>
                             </DialogHeader>
 
@@ -172,9 +191,7 @@ function EventSection({
                                     <div className="mb-4 flex items-center justify-between gap-2">
                                         <h3 className="text-xl font-semibold leading-tight">{event.title}</h3>
                                         <Badge className="border-0 bg-muted/30 text-foreground dark:bg-white/[0.08]">
-                                            {event.event_type
-                                                ? event.event_type.replace(/[_-]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
-                                                : 'Tournament'}
+                                            {formatEventTypeLabel(event.event_type)}
                                         </Badge>
                                     </div>
 
