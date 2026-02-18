@@ -18,7 +18,6 @@ import { SignOutForm } from '@/components/dashboard/signout-form'
 import { Badge } from '@/components/ui/badge'
 import { ThemeSwitch } from '@/components/app/theme-toggle'
 import { MobileNav } from '@/components/dashboard/mobile-nav'
-import { Button } from '@/components/ui/button'
 
 type ResponsiveDashboardFrameProps = {
     children: React.ReactNode
