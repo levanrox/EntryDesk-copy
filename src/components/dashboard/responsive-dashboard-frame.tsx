@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils'
 import { DashboardNavLink } from '@/components/dashboard/nav-link'
 import { SignOutForm } from '@/components/dashboard/signout-form'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { ThemeSwitch } from '@/components/app/theme-toggle'
 import { MobileNav } from '@/components/dashboard/mobile-nav'
 
