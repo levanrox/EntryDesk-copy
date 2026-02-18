@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { ArrowUpRight, Github, Mail } from 'lucide-react'
 
 export function SiteFooter() {
@@ -20,8 +21,11 @@ export function SiteFooter() {
                 <div className="rounded-3xl border border-border/60 bg-background/35 p-8 shadow-sm backdrop-blur-[2px] dark:border-white/[0.12] dark:bg-background/25 md:p-10">
                     <div className="grid gap-10 md:grid-cols-3 md:items-start">
                         <div>
-                            <div className="inline-flex items-center rounded-full border border-border/60 bg-muted/30 px-3 py-1 text-xs font-medium text-muted-foreground dark:border-white/[0.12] dark:bg-white/[0.04]">
-                                EntryDesk
+                            <div className="inline-flex items-center gap-1.5 rounded-full border border-border/60 bg-muted/30 px-3 py-1 text-xs font-medium text-muted-foreground dark:border-white/[0.12] dark:bg-white/[0.04]">
+                                <span className="relative h-3.5 w-3.5 overflow-hidden rounded-full">
+                                    <Image src="/favicon.ico" alt="EntryDesk logo" fill className="object-cover" sizes="14px" priority />
+                                </span>
+                                <span>EntryDesk</span>
                             </div>
                             <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
                                 Lightweight event operations for coaches and organizers.

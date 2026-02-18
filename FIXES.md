@@ -61,6 +61,7 @@ This doc captures the main issues encountered while setting up/running the app l
 - **13th session:** Completed image-only optimization pass (Next image formats/sizes/cache + responsive hero `sizes`) without introducing unrelated UX changes.
 - **14th session:** Fixed Vercel production TypeScript build failure in dashboard entries by replacing an unsafe relation cast with normalized flattening + strict type guard filtering.
 - **15th session:** Integrated external Student Profile Portal (`testlist.shorinkai.in`) into landing UX with header link + dedicated section, then iteratively polished the mock preview (spacing, styling, and accent/avatar overlap fixes).
+- **17th session:** Fixed coach event visibility/actions so upcoming approved events also appear under Active Events with direct Entries navigation, and events auto-disappear after `end_date`.
 
 ## 1) Supabase migration error: `must be owner of table users`
 
@@ -1771,3 +1772,102 @@ This session focused on blending the hosted Student Profile Portal into EntryDes
   - `src/components/app/landing-header.tsx`
   - `src/components/app/student-portal-section.tsx`
 - Result: **No errors found**.
+
+
+---
+
+# Session 16 — Dashboard Mobile Nav & Responsive Frame Polish (2026-02-18)
+
+This session focused on improving the dashboard mobile navigation experience and refining the responsive dashboard frame for better consistency and accessibility.
+
+## 1) Mobile dashboard nav: accessibility, layout, and role clarity
+
+**Symptom**
+- Mobile nav sheet (hamburger menu) lacked clear accessibility structure and role clarity in the header.
+- Brand/logo area was visually inconsistent and role label was sometimes unclear.
+
+**Fix**
+- Added `SheetTitle` for accessibility (Radix compliance) in the mobile nav sheet.
+- Refined the header: EntryDesk logo uses favicon image, role label is always present and capitalized, and role logic is explicit (`Organizer` vs. role).
+- Improved avatar fallback: always shows first letter of name or email.
+- Polished the management section heading and badge styling for role.
+- Improved layout and spacing for all header and footer elements.
+
+**Where**
+- `src/components/dashboard/mobile-nav.tsx`
+
+**Why**
+- Ensures mobile navigation is accessible, visually consistent, and clearly communicates user role.
+
+---
+
+## 2) Responsive dashboard frame: container and sidebar polish
+
+**Symptom**
+- Dashboard frame container used an unnecessary max-width wrapper, causing layout issues on large screens.
+
+**Fix**
+- Simplified the main dashboard frame container to remove the `mx-auto max-w-7xl` wrapper, using a full-width flex layout for better responsiveness.
+
+**Where**
+- `src/components/dashboard/responsive-dashboard-frame.tsx`
+
+**Why**
+- Ensures the dashboard layout is consistent and responsive across all screen sizes, matching the sidebar and content area behavior.
+
+---------------------
+
+# Session 17 — Coach Active/Approved Event Visibility & Routing Fix (2026-02-18)
+
+This session focused on resolving coach dashboard confusion where approved upcoming events disappeared from **Active Events** and did not provide a direct action to manage entries.
+
+## 1) Approved upcoming events missing from Active Events
+
+**Symptom**
+- Upcoming events that were already approved showed in **Approved Events** but were removed from **Active Events**.
+- This made active participation flow feel broken because an event could be active by date but hidden from the active list.
+
+**Root cause**
+- Active-event filters explicitly excluded events whose application status was `approved`.
+
+**Fix**
+- Removed the exclusion filter so all upcoming events (`end_date >= today`) remain visible in **Active Events**, including approved ones.
+
+**Where**
+- `src/app/dashboard/page.tsx`
+- `src/app/dashboard/events-browser/page.tsx`
+
+**Why this is correct**
+- “Active” should represent date-based availability, not approval-state exclusion.
+- Keeps UX consistent: upcoming events remain discoverable until the event end date.
+
+---
+
+## 2) Approved items in Active Events now route to entries
+
+**Symptom**
+- In Active lists, approved events still rendered application-style actions, which was not the correct next step for coaches.
+
+**Fix**
+- For approved status in Active Events, replaced apply-action behavior with a direct **Entries** button linking to `/dashboard/entries/{eventId}`.
+- Non-approved statuses continue to use the existing apply/pending/rejected action flow.
+
+**Where**
+- `src/app/dashboard/page.tsx`
+- `src/app/dashboard/events-browser/page.tsx`
+
+**Why this is correct**
+- Once approved, the coach’s primary action is entry management, not re-application.
+- Reduces friction by making the next valid action one click away.
+
+---
+
+## 3) Event lifecycle behavior (auto-vanish after end date)
+
+**Behavior**
+- Active/upcoming sections continue to use date gating (`end_date >= today`).
+- This means if an event ends in 3 days, it remains visible for those 3 days and automatically disappears after its final date.
+
+**Why this matches intended UX**
+- Aligns both **Approved** and **Active** displays with event lifecycle timing.
+- Prevents stale events from lingering in active surfaces.

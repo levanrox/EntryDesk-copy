@@ -154,7 +154,6 @@ export default async function DashboardPage() {
 
     const activePublicEvents = (publicEvents ?? [])
         .filter((event) => event.end_date >= today)
-        .filter((event) => appMap.get(event.id) !== 'approved')
 
     const getStatusIcon = (status: string | undefined) => {
         if (status === 'approved') return <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-500" />
@@ -545,10 +544,19 @@ export default async function DashboardPage() {
                                                     Details
                                                 </Button>
                                             </Link>
-                                            <ApplyButton
-                                                eventId={event.id}
-                                                status={status}
-                                            />
+                                            {status === 'approved' ? (
+                                                <Link href={`/dashboard/entries/${event.id}`}>
+                                                    <Button className="rounded-xl">
+                                                        Entries
+                                                        <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                                                    </Button>
+                                                </Link>
+                                            ) : (
+                                                <ApplyButton
+                                                    eventId={event.id}
+                                                    status={status}
+                                                />
+                                            )}
                                         </div>
                                     </div>
                                 )

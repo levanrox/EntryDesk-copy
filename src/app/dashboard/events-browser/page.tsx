@@ -40,7 +40,7 @@ export default async function EventBrowserPage({
     const pastEvents = (events ?? []).filter((event) => event.end_date < today)
 
     const approvedUpcomingEvents = upcomingEvents.filter((event) => appMap.get(event.id) === 'approved')
-    const activeUpcomingEvents = upcomingEvents.filter((event) => appMap.get(event.id) !== 'approved')
+    const activeUpcomingEvents = upcomingEvents
     const totalPages = Math.ceil((count ?? 0) / limit)
 
     const getStatusIcon = (status: string | undefined) => {
@@ -182,7 +182,16 @@ export default async function EventBrowserPage({
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2 shrink-0">
-                                            <ApplyButton eventId={event.id} status={status} />
+                                            {status === 'approved' ? (
+                                                <Link href={`/dashboard/entries/${event.id}`}>
+                                                    <Button size="sm" className="h-7 text-xs">
+                                                        Entries
+                                                        <ArrowRight className="ml-1 h-3 w-3" />
+                                                    </Button>
+                                                </Link>
+                                            ) : (
+                                                <ApplyButton eventId={event.id} status={status} />
+                                            )}
                                         </div>
                                     </div>
                                 )
