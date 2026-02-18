@@ -183,12 +183,12 @@ export default async function EventBrowserPage({
                                         </div>
                                         <div className="flex items-center gap-2 shrink-0">
                                             {status === 'approved' ? (
-                                                <Link href={`/dashboard/entries/${event.id}`}>
-                                                    <Button size="sm" className="h-7 text-xs">
+                                                <Button asChild size="sm" className="h-7 text-xs">
+                                                    <Link href={`/dashboard/entries/${event.id}`}>
                                                         Entries
                                                         <ArrowRight className="ml-1 h-3 w-3" />
-                                                    </Button>
-                                                </Link>
+                                                    </Link>
+                                                </Button>
                                             ) : (
                                                 <ApplyButton eventId={event.id} status={status} />
                                             )}
