@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input"
 import { StudentDialog } from "@/components/students/student-dialog"
 import { normalizeDobToIso } from "@/lib/date"
 import { updateStudentGenericChecked } from "@/app/dashboard/students/actions"
+import { toast } from "sonner"
 
 interface CoachStudentRegisterProps {
     students: any[]
@@ -104,8 +105,10 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
             }))
             await bulkCreateEntries(eventId, entries)
             setSelectedIds(new Set())
+            toast.success(`${count} student${count > 1 ? 's' : ''} added to event`)
         } catch (e) {
-            alert('Failed to add entries')
+            console.error(e)
+            toast.error('Failed to add students to event')
         } finally {
             setIsAdding(false)
         }
