@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { SiteFooterGate } from "@/components/app/site-footer-gate";
 import { ThemeScript } from "@/components/app/theme-script";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
@@ -42,6 +43,7 @@ export default function RootLayout({
             <SiteFooterGate />
           </AppNavigationProvider>
         </Suspense>
+        <Toaster richColors position="top-center" />
         <SpeedInsights />
         <Analytics />
       </body>

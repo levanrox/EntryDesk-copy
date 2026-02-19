@@ -41,7 +41,6 @@ export function LandingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                 </Link>
 
                 <nav className="flex items-center gap-2">
-                    <ThemeSwitch />
                     <a href="#features" className={navLinkClassName}>
                         Features
                     </a>
@@ -59,6 +58,7 @@ export function LandingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                     <a href="#contact" className={navLinkClassName}>
                         Contact
                     </a>
+                    <ThemeSwitch />
                     {isLoggedIn ? (
                         <AppNavLink href="/dashboard">
                             <Button size="sm" className="transition-all duration-200 hover:bg-primary/85 hover:text-primary-foreground active:scale-95 active:bg-primary/75">

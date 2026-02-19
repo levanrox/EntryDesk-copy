@@ -37,11 +37,13 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
     const [editingStudent, setEditingStudent] = useState<any>(null)
+    const [editingEntry, setEditingEntry] = useState<any>(null)
     const [dialogOpen, setDialogOpen] = useState(false)
 
     // Filters & Pagination
     const [searchQuery, setSearchQuery] = useState('')
     const [statusFilter, setStatusFilter] = useState('all')
+    const [beltFilter, setBeltFilter] = useState('all')
     const [dayFilter, setDayFilter] = useState('all')
     const [page, setPage] = useState(1)
 
@@ -54,12 +56,18 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
         setSelectedIds(new Set())
     }, [statusPreset, statusFilter])
 
+    // Derived filter options
+    const uniqueRanks = Array.from(
+        new Set(entries.map((e) => e.students?.rank).filter(Boolean))
+    ).sort()
+
     // Filter Logic
     const filteredEntries = entries.filter(e => {
         const matchesSearch = e.students?.name.toLowerCase().includes(searchQuery.toLowerCase())
         const matchesStatus = statusFilter === 'all' || e.status === statusFilter
+        const matchesBelt = beltFilter === 'all' || e.students?.rank === beltFilter
         const matchesDay = dayFilter === 'all' || e.event_day_id === dayFilter
-        return matchesSearch && matchesStatus && matchesDay
+        return matchesSearch && matchesStatus && matchesBelt && matchesDay
     })
 
     // Pagination Logic
@@ -127,8 +135,9 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
         return missing
     }
 
-    const startEdit = (student: any) => {
-        setEditingStudent(student)
+    const startEdit = (entry: any) => {
+        setEditingStudent(entry.students)
+        setEditingEntry(entry)
         setDialogOpen(true)
     }
 
@@ -138,8 +147,11 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
                 <StudentDialog
                     dojos={dojos}
                     student={editingStudent}
+                    entry={editingEntry}
+                    eventDays={eventDays}
                     open={dialogOpen}
                     onOpenChange={setDialogOpen}
+                    showTrigger={false}
                 />
             )}
 
@@ -164,6 +176,17 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
                             <SelectItem value="rejected">Rejected</SelectItem>
                         </SelectContent>
                     </Select>
+                    <Select value={beltFilter} onValueChange={(v) => { setBeltFilter(v); setPage(1); }}>
+                        <SelectTrigger className="h-11 w-[150px] rounded-full">
+                            <SelectValue placeholder="Belt" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Belts</SelectItem>
+                            {uniqueRanks.map((r) => (
+                                <SelectItem key={r} value={r as string}>{r}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                     {eventDays && eventDays.length > 0 && (
                         <Select value={dayFilter} onValueChange={(v) => { setDayFilter(v); setPage(1); }}>
                             <SelectTrigger className="h-11 w-[160px] rounded-full">
@@ -179,19 +202,21 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
                     )}
                 </div>
 
-                {!isReadOnly && selectedIds.size > 0 && (
-                    <div className="flex items-center gap-2 rounded-full border border-white/[0.06] bg-background/50 px-2 py-1">
-                        <span className="text-sm font-medium mr-2 hidden md:inline">{selectedIds.size} selected</span>
-                        <Button size="sm" className="rounded-full" onClick={handleSubmit} disabled={isSubmitting || isDeleting}>
-                            {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
-                            Submit
-                        </Button>
-                        <Button size="sm" variant="destructive" className="rounded-full" onClick={handleDelete} disabled={isSubmitting || isDeleting}>
-                            {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
-                            Delete
-                        </Button>
-                    </div>
-                )}
+                <div className="flex items-center gap-2">
+                    {!isReadOnly && selectedIds.size > 0 && (
+                        <div className="flex items-center gap-2 rounded-full border border-white/[0.06] bg-background/50 px-2 py-1">
+                            <span className="text-sm font-medium mr-2 hidden md:inline">{selectedIds.size} selected</span>
+                            <Button size="sm" className="rounded-full" onClick={handleSubmit} disabled={isSubmitting || isDeleting}>
+                                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+                                Submit
+                            </Button>
+                            <Button size="sm" variant="destructive" className="rounded-full" onClick={handleDelete} disabled={isSubmitting || isDeleting}>
+                                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Trash2 className="h-4 w-4 mr-2" />}
+                                Delete
+                            </Button>
+                        </div>
+                    )}
+                </div>
             </div>
 
             <div className="relative w-full min-h-[300px] overflow-auto rounded-2xl border border-white/[0.06] bg-background/20 dark:bg-white/[0.02]">
@@ -212,6 +237,7 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
                                 />
                             </th>
                             <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Student</th>
+                            <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Belt</th>
                             <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Day</th>
                             <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Type</th>
                             <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Status</th>
@@ -220,7 +246,7 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
                     <tbody className="[&_tr:last-child]:border-0">
                         {paginatedEntries.length === 0 ? (
                             <tr>
-                                <td colSpan={5} className="h-24 text-center text-muted-foreground">
+                                <td colSpan={6} className="h-24 text-center text-muted-foreground">
                                     {filteredEntries.length === 0
                                         ? "No entries match your filters."
                                         : "No active entries. Go to 'Register' tab to add students."}
@@ -228,6 +254,7 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
                             </tr>
                         ) : paginatedEntries.map((entry) => {
                             const missing = getMissingFields(entry.students)
+                            const isEditable = !isReadOnly && entry.status === 'draft'
                             return (
                                 <tr key={entry.id} className="border-b border-white/[0.05] transition-colors hover:bg-muted/30 data-[state=selected]:bg-muted">
                                     <td className="p-4 align-middle">
@@ -237,6 +264,7 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
                                             disabled={isReadOnly}
                                         />
                                     </td>
+                                    {/* Student */}
                                     {/* @ts-ignore */}
                                     <td className="p-4 align-middle font-medium">
                                         <div className="flex items-center gap-2">
@@ -258,16 +286,25 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
                                                     variant="ghost"
                                                     size="icon"
                                                     className="h-6 w-6 ml-1 text-muted-foreground hover:text-foreground"
-                                                    onClick={() => startEdit(entry.students)}
+                                                    onClick={() => startEdit(entry)}
                                                 >
                                                     <Pencil className="h-3 w-3" />
                                                 </Button>
                                             )}
                                         </div>
                                     </td>
+
+                                    {/* Belt */}
+                                    <td className="p-4 align-middle capitalize">{entry.students?.rank || '-'}</td>
+
+                                    {/* Day */}
                                     {/* @ts-ignore */}
-                                    <td className="p-4 align-middle ">{entry.event_days?.name || '-'}</td>
-                                    <td className="p-4 align-middle capitalize">{entry.participation_type}</td>
+                                    <td className="p-4 align-middle">{entry.event_days?.name || '-'}</td>
+
+                                    {/* Type */}
+                                    <td className="p-4 align-middle capitalize">{entry.participation_type || '-'}</td>
+
+                                    {/* Status */}
                                     <td className="p-4 align-middle">
                                         <span className={cn(
                                             "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent",
