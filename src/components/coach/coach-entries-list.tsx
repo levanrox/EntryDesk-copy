@@ -140,6 +140,7 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
                     student={editingStudent}
                     open={dialogOpen}
                     onOpenChange={setDialogOpen}
+                    showTrigger={false}
                 />
             )}
 

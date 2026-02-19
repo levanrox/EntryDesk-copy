@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import {
     Dialog,
@@ -44,9 +44,10 @@ interface StudentDialogProps {
     student?: Student
     open?: boolean
     onOpenChange?: (open: boolean) => void
+    showTrigger?: boolean
 }
 
-export function StudentDialog({ dojos, student, open, onOpenChange }: StudentDialogProps) {
+export function StudentDialog({ dojos, student, open, onOpenChange, showTrigger = true }: StudentDialogProps) {
     const [internalOpen, setInternalOpen] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -59,11 +60,38 @@ export function StudentDialog({ dojos, student, open, onOpenChange }: StudentDia
     const [selectedDojo, setSelectedDojo] = useState<string>(student?.dojo_id || '')
     const [selectedGender, setSelectedGender] = useState<string>(student?.gender || '')
     const [selectedRank, setSelectedRank] = useState<string>(student?.rank || '')
+    const [name, setName] = useState<string>(student?.name || '')
+    const [weight, setWeight] = useState<string>(student?.weight?.toString() || '')
+    const [dob, setDob] = useState<string>(normalizeDobToIso(student?.date_of_birth) || '')
+
+    // Update form data whenever student prop changes or dialog opens
+    useEffect(() => {
+        if (show && student) {
+            setSelectedDojo(student.dojo_id || '')
+            setSelectedGender(student.gender || '')
+            setSelectedRank(student.rank || '')
+            setName(student.name || '')
+            setWeight(student.weight?.toString() || '')
+            setDob(normalizeDobToIso(student.date_of_birth) || '')
+        } else if (!show && !student) {
+            // Reset form when closing in create mode
+            setSelectedDojo('')
+            setSelectedGender('')
+            setSelectedRank('')
+            setName('')
+            setWeight('')
+            setDob('')
+        }
+    }, [show, student])
 
     const handleSubmit = async (formData: FormData) => {
+        // Append all current state values to formData
+        formData.append('name', name)
         formData.append('dojo_id', selectedDojo)
         formData.append('gender', selectedGender)
         formData.append('rank', selectedRank)
+        formData.append('weight', weight)
+        formData.append('dob', dob)
 
         setIsSubmitting(true)
         try {
@@ -73,12 +101,6 @@ export function StudentDialog({ dojos, student, open, onOpenChange }: StudentDia
                 await createStudent(formData)
             }
             setShow(false)
-            if (!isEditing) {
-                // Reset form for create mode
-                setSelectedDojo('')
-                setSelectedGender('')
-                setSelectedRank('')
-            }
         } catch (error) {
             alert('Failed to save student')
         } finally {
@@ -88,7 +110,7 @@ export function StudentDialog({ dojos, student, open, onOpenChange }: StudentDia
 
     return (
         <Dialog open={show} onOpenChange={setShow}>
-            {!isEditing && (
+            {!isEditing && showTrigger && (
                 <DialogTrigger asChild>
                     <Button>Add Student</Button>
                 </DialogTrigger>
@@ -119,7 +141,7 @@ export function StudentDialog({ dojos, student, open, onOpenChange }: StudentDia
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="name" className="text-right">Name</Label>
-                            <Input id="name" name="name" defaultValue={student?.name} className="col-span-3" required />
+                            <Input id="name" name="name" value={name} onChange={(e) => setName(e.target.value)} className="col-span-3" required />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="gender" className="text-right">Gender</Label>
@@ -156,7 +178,7 @@ export function StudentDialog({ dojos, student, open, onOpenChange }: StudentDia
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="weight" className="text-right">Weight (kg)</Label>
-                            <Input id="weight" name="weight" type="number" step="0.1" defaultValue={student?.weight || ''} className="col-span-3" />
+                            <Input id="weight" name="weight" type="number" step="0.1" value={weight} onChange={(e) => setWeight(e.target.value)} className="col-span-3" />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="dob" className="text-right">DOB</Label>
@@ -164,7 +186,8 @@ export function StudentDialog({ dojos, student, open, onOpenChange }: StudentDia
                                 id="dob"
                                 name="dob"
                                 type="date"
-                                defaultValue={normalizeDobToIso(student?.date_of_birth) || ''}
+                                value={dob}
+                                onChange={(e) => setDob(e.target.value)}
                                 className="col-span-3"
                             />
                         </div>
