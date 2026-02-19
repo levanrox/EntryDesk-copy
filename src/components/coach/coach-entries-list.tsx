@@ -43,6 +43,7 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
     // Filters & Pagination
     const [searchQuery, setSearchQuery] = useState('')
     const [statusFilter, setStatusFilter] = useState('all')
+    const [beltFilter, setBeltFilter] = useState('all')
     const [dayFilter, setDayFilter] = useState('all')
     const [page, setPage] = useState(1)
 
@@ -55,12 +56,18 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
         setSelectedIds(new Set())
     }, [statusPreset, statusFilter])
 
+    // Derived filter options
+    const uniqueRanks = Array.from(
+        new Set(entries.map((e) => e.students?.rank).filter(Boolean))
+    ).sort()
+
     // Filter Logic
     const filteredEntries = entries.filter(e => {
         const matchesSearch = e.students?.name.toLowerCase().includes(searchQuery.toLowerCase())
         const matchesStatus = statusFilter === 'all' || e.status === statusFilter
+        const matchesBelt = beltFilter === 'all' || e.students?.rank === beltFilter
         const matchesDay = dayFilter === 'all' || e.event_day_id === dayFilter
-        return matchesSearch && matchesStatus && matchesDay
+        return matchesSearch && matchesStatus && matchesBelt && matchesDay
     })
 
     // Pagination Logic
@@ -167,6 +174,17 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
                             <SelectItem value="submitted">Submitted</SelectItem>
                             <SelectItem value="approved">Approved</SelectItem>
                             <SelectItem value="rejected">Rejected</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Select value={beltFilter} onValueChange={(v) => { setBeltFilter(v); setPage(1); }}>
+                        <SelectTrigger className="h-11 w-[150px] rounded-full">
+                            <SelectValue placeholder="Belt" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Belts</SelectItem>
+                            {uniqueRanks.map((r) => (
+                                <SelectItem key={r} value={r as string}>{r}</SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                     {eventDays && eventDays.length > 0 && (
