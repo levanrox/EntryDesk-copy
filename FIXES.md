@@ -62,6 +62,7 @@ This doc captures the main issues encountered while setting up/running the app l
 - **14th session:** Fixed Vercel production TypeScript build failure in dashboard entries by replacing an unsafe relation cast with normalized flattening + strict type guard filtering.
 - **15th session:** Integrated external Student Profile Portal (`testlist.shorinkai.in`) into landing UX with header link + dedicated section, then iteratively polished the mock preview (spacing, styling, and accent/avatar overlap fixes).
 - **17th session:** Fixed coach event visibility/actions so upcoming approved events also appear under Active Events with direct Entries navigation, and events auto-disappear after `end_date`.
+- **18th session:** Reworked landing-page render path for faster first paint (above-the-fold first, deferred below-the-fold), moved public events loading to post-render client fetch, fixed App Router dynamic import build issue, and stabilized `/api/public-events` with schema-correct query + scoped proxy behavior.
 
 ## 1) Supabase migration error: `must be owner of table users`
 
@@ -1871,3 +1872,170 @@ This session focused on resolving coach dashboard confusion where approved upcom
 **Why this matches intended UX**
 - Aligns both **Approved** and **Active** displays with event lifecycle timing.
 - Prevents stale events from lingering in active surfaces.
+
+---
+
+# Session 18 — Landing Performance Render Order & Public Events API Stabilization (2026-02-20)
+
+This session focused on improving landing-page perceived performance and Core Web Vitals by prioritizing critical hero render, deferring heavy/non-critical sections, and fixing the public-events data path so first paint is not blocked.
+
+## 1) Landing page initial render was blocked by server work
+
+**Symptom**
+- Home route performed user/session and events queries before initial HTML render.
+- Hero felt delayed and first paint was slower than expected.
+
+**Root cause**
+- `src/app/page.tsx` was an async server component waiting on Supabase (`auth.getUser()` + events fetch) before returning UI.
+
+**Fix**
+- Refactored landing page to render immediately without awaiting data in the critical path.
+- Kept above-the-fold content independent of API responses.
+
+**Where**
+- `src/app/page.tsx`
+
+**Why this is correct**
+- Removes render-blocking network work from initial route render.
+- Improves FCP/LCP perception by shipping hero markup immediately.
+
+---
+
+## 2) Hero LCP element optimization (image + critical section)
+
+**Requirement addressed**
+- Main hero image must render immediately and must not be lazy-loaded.
+
+**Fix**
+- Hero uses `next/image` with:
+  - `priority`
+  - `quality={75}`
+  - `sizes="100vw"`
+  - `fill` in a sized hero container
+
+**Where**
+- `src/app/page.tsx`
+
+**Why this is correct**
+- Ensures the LCP image is treated as high priority and served responsively.
+- Preserves stable layout sizing and avoids extra jank for the hero surface.
+
+---
+
+## 3) Deferred below-the-fold sections with progressive loading
+
+**Symptom**
+- Landing loaded heavy showcase sections together, increasing initial JS/render pressure.
+
+**Fix**
+- Converted non-critical sections to dynamic imports with loading fallbacks:
+  - `LandingUiPreview`
+  - `StudentPortalSection`
+  - `PublicEventsShell`
+- Added skeleton placeholders with reserved heights to reduce CLS while deferred chunks load.
+
+**Where**
+- `src/app/page.tsx`
+
+**Build correction made during implementation**
+- Initial attempt used `ssr: false` in `next/dynamic` from a server component (`app/page.tsx`), which is invalid in App Router.
+- Removed `ssr: false` and retained loading fallbacks to keep behavior compliant.
+
+**Why this is correct**
+- Keeps critical content on first paint while progressively loading below-the-fold UI.
+- Uses App Router-compatible dynamic import behavior.
+
+---
+
+## 4) Public events API moved off critical render and fetched client-side
+
+**Symptom**
+- Public events were queried during initial page render.
+
+**Fix**
+- Added client shell that fetches events asynchronously after mount.
+- Added dedicated API route for public events.
+
+**Where**
+- `src/components/app/public-events-shell.tsx` (new)
+- `src/app/api/public-events/route.ts` (new)
+
+**Why this is correct**
+- Page can paint immediately; events hydrate progressively without blocking hero render.
+
+---
+
+## 5) Header auth behavior changed to non-blocking client resolution
+
+**Symptom**
+- Header CTA previously depended on server auth resolution at page render time.
+
+**Fix**
+- `LandingHeader` now resolves session client-side (`supabase.auth.getSession()`) after first paint and swaps CTA state (`Login / Signup` ↔ `Dashboard`) when ready.
+
+**Where**
+- `src/components/app/landing-header.tsx`
+
+**Why this is correct**
+- Avoids server render dependency for hero/nav first paint while preserving auth-aware UI shortly after hydration.
+
+---
+
+## 6) `/api/public-events` error stabilization and root-cause correction
+
+**Symptom**
+- `/api/public-events` returned 500 in runtime.
+
+**Root cause**
+- Query selected a non-existent events column (`max_participants`) relative to current DB schema.
+
+**Fix**
+- Updated select list to schema-valid fields only:
+  - `id,title,event_type,start_date,end_date,location,description`
+
+**Where**
+- `src/app/api/public-events/route.ts`
+- Verified against schema in `supabase/migrations/db.sql`.
+
+**Why this is correct**
+- Fixes the actual failure source instead of masking errors.
+- Keeps API payload aligned with table definition.
+
+---
+
+## 7) Proxy/middleware scope clarified for public landing performance
+
+**Symptom**
+- Middleware/proxy overhead appeared in home route timings.
+
+**Fix**
+- Scoped proxy matcher to dashboard routes only.
+
+**Where**
+- `src/proxy.ts`
+
+**Why this is correct**
+- Public landing flow no longer pays auth session-refresh middleware cost.
+- Protected dashboard routes remain guarded.
+
+---
+
+## 8) Verification log
+
+**Build**
+- `next build` initially failed due to `ssr: false` in server component dynamic import.
+- After removing `ssr: false`, production build completed successfully.
+
+**Lint (targeted)**
+- Targeted lint runs for touched landing/performance files completed without errors.
+- Full-repo lint still reports many unrelated legacy issues (outside this session scope).
+
+---
+
+## Final state after session
+
+- Hero/nav/image render immediately without waiting on API.
+- Non-critical landing sections load progressively with reserved skeleton space.
+- Public events load asynchronously after paint via API route.
+- App Router constraints are respected (no invalid `ssr: false` usage in server component).
+- Public-events query now matches current DB schema.

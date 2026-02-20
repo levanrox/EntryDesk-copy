@@ -6,9 +6,11 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { AppNavLink } from '@/components/app/nav-link'
 import { ThemeSwitch } from '@/components/app/theme-toggle'
+import { createClient } from '@/lib/supabase/client'
 
-export function LandingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
+export function LandingHeader() {
     const [hasScrolled, setHasScrolled] = useState(false)
+    const [isLoggedIn, setIsLoggedIn] = useState(false)
 
     useEffect(() => {
         const onScroll = () => {
@@ -18,6 +20,27 @@ export function LandingHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
         onScroll()
         window.addEventListener('scroll', onScroll, { passive: true })
         return () => window.removeEventListener('scroll', onScroll)
+    }, [])
+
+    useEffect(() => {
+        let isMounted = true
+
+        const resolveSession = async () => {
+            const supabase = createClient()
+            const {
+                data: { session },
+            } = await supabase.auth.getSession()
+
+            if (isMounted) {
+                setIsLoggedIn(!!session?.user)
+            }
+        }
+
+        resolveSession()
+
+        return () => {
+            isMounted = false
+        }
     }, [])
 
     const headerClassName = hasScrolled

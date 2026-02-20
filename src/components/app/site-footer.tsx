@@ -10,7 +10,7 @@ export function SiteFooter() {
             <div
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-0 -z-10 bg-cover bg-[center_35%] opacity-75 blur-[1px] scale-105 dark:opacity-80"
-                style={{ backgroundImage: "url('/footer bg.png')" }}
+                style={{ backgroundImage: "url('/footer bg.webp')" }}
             />
             <div
                 aria-hidden="true"
