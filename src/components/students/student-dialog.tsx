@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import {
     Dialog,
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select"
 import { createStudent, updateStudent } from '@/app/dashboard/students/actions'
 import { normalizeDobToIso } from '@/lib/date'
+import { upsertEntry } from '@/app/dashboard/entries/actions'
 
 interface Dojo {
     id: string
@@ -44,9 +45,12 @@ interface StudentDialogProps {
     student?: Student
     open?: boolean
     onOpenChange?: (open: boolean) => void
+    showTrigger?: boolean
+    entry?: any
+    eventDays?: any[]
 }
 
-export function StudentDialog({ dojos, student, open, onOpenChange }: StudentDialogProps) {
+export function StudentDialog({ dojos, student, open, onOpenChange, showTrigger = true, entry, eventDays }: StudentDialogProps) {
     const [internalOpen, setInternalOpen] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -59,11 +63,46 @@ export function StudentDialog({ dojos, student, open, onOpenChange }: StudentDia
     const [selectedDojo, setSelectedDojo] = useState<string>(student?.dojo_id || '')
     const [selectedGender, setSelectedGender] = useState<string>(student?.gender || '')
     const [selectedRank, setSelectedRank] = useState<string>(student?.rank || '')
+    const [name, setName] = useState<string>(student?.name || '')
+    const [weight, setWeight] = useState<string>(student?.weight?.toString() || '')
+    const [dob, setDob] = useState<string>(normalizeDobToIso(student?.date_of_birth) || '')
+    const [entryDayId, setEntryDayId] = useState<string>(entry?.event_day_id || '')
+    const [entryType, setEntryType] = useState<string>(entry?.participation_type || '')
+
+    // Update form data whenever student prop changes or dialog opens
+    useEffect(() => {
+        if (show && student) {
+            setSelectedDojo(student.dojo_id || '')
+            setSelectedGender(student.gender || '')
+            setSelectedRank(student.rank || '')
+            setName(student.name || '')
+            setWeight(student.weight?.toString() || '')
+            setDob(normalizeDobToIso(student.date_of_birth) || '')
+            if (entry) {
+                setEntryDayId(entry.event_day_id || '')
+                setEntryType(entry.participation_type || '')
+            }
+        } else if (!show && !student) {
+            // Reset form when closing in create mode
+            setSelectedDojo('')
+            setSelectedGender('')
+            setSelectedRank('')
+            setName('')
+            setWeight('')
+            setDob('')
+            setEntryDayId('')
+            setEntryType('')
+        }
+    }, [show, student, entry])
 
     const handleSubmit = async (formData: FormData) => {
+        // Append all current state values to formData
+        formData.append('name', name)
         formData.append('dojo_id', selectedDojo)
         formData.append('gender', selectedGender)
         formData.append('rank', selectedRank)
+        formData.append('weight', weight)
+        formData.append('dob', dob)
 
         setIsSubmitting(true)
         try {
@@ -72,13 +111,20 @@ export function StudentDialog({ dojos, student, open, onOpenChange }: StudentDia
             } else {
                 await createStudent(formData)
             }
-            setShow(false)
-            if (!isEditing) {
-                // Reset form for create mode
-                setSelectedDojo('')
-                setSelectedGender('')
-                setSelectedRank('')
+
+            // If this dialog was opened from the entries table with an entry,
+            // also update the entry's day/type.
+            if (entry) {
+                const entryForm = new FormData()
+                entryForm.append('event_id', entry.event_id)
+                entryForm.append('student_id', entry.student_id)
+                entryForm.append('category_id', entry.category_id || '')
+                if (entryDayId) entryForm.append('event_day_id', entryDayId)
+                if (entryType) entryForm.append('participation_type', entryType)
+                await upsertEntry(entryForm)
             }
+
+            setShow(false)
         } catch (error) {
             alert('Failed to save student')
         } finally {
@@ -88,7 +134,7 @@ export function StudentDialog({ dojos, student, open, onOpenChange }: StudentDia
 
     return (
         <Dialog open={show} onOpenChange={setShow}>
-            {!isEditing && (
+            {!isEditing && showTrigger && (
                 <DialogTrigger asChild>
                     <Button>Add Student</Button>
                 </DialogTrigger>
@@ -119,7 +165,7 @@ export function StudentDialog({ dojos, student, open, onOpenChange }: StudentDia
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="name" className="text-right">Name</Label>
-                            <Input id="name" name="name" defaultValue={student?.name} className="col-span-3" required />
+                            <Input id="name" name="name" value={name} onChange={(e) => setName(e.target.value)} className="col-span-3" required />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="gender" className="text-right">Gender</Label>
@@ -156,7 +202,7 @@ export function StudentDialog({ dojos, student, open, onOpenChange }: StudentDia
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="weight" className="text-right">Weight (kg)</Label>
-                            <Input id="weight" name="weight" type="number" step="0.1" defaultValue={student?.weight || ''} className="col-span-3" />
+                            <Input id="weight" name="weight" type="number" step="0.1" value={weight} onChange={(e) => setWeight(e.target.value)} className="col-span-3" />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="dob" className="text-right">DOB</Label>
@@ -164,10 +210,46 @@ export function StudentDialog({ dojos, student, open, onOpenChange }: StudentDia
                                 id="dob"
                                 name="dob"
                                 type="date"
-                                defaultValue={normalizeDobToIso(student?.date_of_birth) || ''}
+                                value={dob}
+                                onChange={(e) => setDob(e.target.value)}
                                 className="col-span-3"
                             />
                         </div>
+
+                        {entry && eventDays && eventDays.length > 0 && (
+                            <>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label className="text-right">Day</Label>
+                                    <div className="col-span-3">
+                                        <Select value={entryDayId} onValueChange={setEntryDayId}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select Day" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {eventDays.map((d: any) => (
+                                                    <SelectItem key={d.id} value={d.id}>{d.name || d.date}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label className="text-right">Type</Label>
+                                    <div className="col-span-3">
+                                        <Select value={entryType} onValueChange={setEntryType}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select Type" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="kata">Kata</SelectItem>
+                                                <SelectItem value="kumite">Kumite</SelectItem>
+                                                <SelectItem value="both">Both</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </div>
                     <DialogFooter>
                         <Button type="submit" disabled={isSubmitting}>

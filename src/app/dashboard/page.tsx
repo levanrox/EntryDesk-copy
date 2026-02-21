@@ -2,9 +2,9 @@ import { getUserProfile } from '@/lib/auth/require-role'
 import { DashboardPageHeader } from '@/components/dashboard/page-header'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { ArrowRight, Calendar, Users, ClipboardList, LayoutGrid, CheckSquare, FolderOpen, ListTodo, MapPin, CheckCircle2, Clock, XCircle } from 'lucide-react'
+import { ArrowRight, Calendar, Users, ClipboardList, LayoutGrid, CheckSquare, FolderOpen, ListTodo, MapPin, CheckCircle2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { ApplyButton } from '@/components/events/apply-button'
+import { CoachActiveEventsCards } from '@/components/dashboard/coach-active-events-cards'
 
 type PublicEvent = {
     id: string
@@ -13,6 +13,7 @@ type PublicEvent = {
     end_date: string
     location: string | null
     event_type: string | null
+    description?: string | null
     is_public: boolean
 }
 
@@ -105,7 +106,7 @@ export default async function DashboardPage() {
                 .eq('coach_id', user.id),
             supabase
                 .from('events')
-                .select('id, title, start_date, end_date, location, event_type, is_public')
+                .select('id, title, start_date, end_date, location, event_type, description, is_public')
                 .eq('is_public', true)
                 .order('start_date', { ascending: true }),
             supabase
@@ -143,11 +144,6 @@ export default async function DashboardPage() {
         studentsCount = (studentsRes as CountResult).count ?? 0
     }
 
-    const appMap = new Map<string, string>()
-    applications?.forEach(app => {
-        appMap.set(app.event_id, app.status)
-    })
-
     const approvedEvents = (approvedApplications ?? [])
         .flatMap((app) => app.events || [])
         .filter((event): event is ApprovedEvent => !!event && event.end_date >= today)
@@ -155,19 +151,7 @@ export default async function DashboardPage() {
     const activePublicEvents = (publicEvents ?? [])
         .filter((event) => event.end_date >= today)
 
-    const getStatusIcon = (status: string | undefined) => {
-        if (status === 'approved') return <CheckCircle2 className="h-3 w-3 text-emerald-600 dark:text-emerald-500" />
-        if (status === 'pending') return <Clock className="h-3 w-3 text-amber-600 dark:text-amber-500" />
-        if (status === 'rejected') return <XCircle className="h-3 w-3 text-red-600 dark:text-red-500" />
-        return null
-    }
-
-    const getStatusText = (status: string | undefined) => {
-        if (status === 'approved') return 'Approved'
-        if (status === 'pending') return 'Pending'
-        if (status === 'rejected') return 'Rejected'
-        return null
-    }
+    const statusByEventId = Object.fromEntries(applications.map((app) => [app.event_id, app.status])) as Record<string, string>
 
     return (
         <div className="space-y-8">
@@ -460,7 +444,7 @@ export default async function DashboardPage() {
                                                     <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                                                         <span className="flex items-center gap-0.5">
                                                             <Calendar className="h-2.5 w-2.5" />
-                                                            {new Date(event.start_date).toLocaleDateString()}
+                                                            {new Date(event.start_date).toLocaleDateString()} – {new Date(event.end_date ?? event.start_date).toLocaleDateString()}
                                                         </span>
                                                         {event.location && (
                                                             <>
@@ -504,69 +488,10 @@ export default async function DashboardPage() {
                             </Button>
                         </div>
 
-                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                            {activePublicEvents?.map((event: any) => {
-                                const status = appMap.get(event.id)
-                                return (
-                                    <div key={event.id} className="group flex flex-col rounded-2xl border border-black/10 bg-gradient-to-b from-background/90 to-background/50 hover:bg-background/70 transition-colors p-5 shadow-md shadow-black/5 dark:border-white/10 dark:shadow-black/40">
-                                        <div className="flex items-start justify-between mb-4">
-                                            <div className="space-y-1">
-                                                <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/20 hover:bg-primary/10">
-                                                    {event.event_type}
-                                                </Badge>
-                                            </div>
-                                            {status && (
-                                                <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-background border border-border text-[10px] font-medium shadow-sm">
-                                                    {getStatusIcon(status)}
-                                                    <span>{getStatusText(status)}</span>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <h3 className="font-bold text-lg leading-tight mb-2 group-hover:text-primary transition-colors">{event.title}</h3>
-
-                                        <div className="space-y-2 mb-6 text-sm text-muted-foreground">
-                                            <div className="flex items-center gap-2">
-                                                <Calendar className="h-3.5 w-3.5" />
-                                                <span>{new Date(event.start_date).toLocaleDateString()}</span>
-                                            </div>
-                                            {event.location && (
-                                                <div className="flex items-center gap-2">
-                                                    <MapPin className="h-3.5 w-3.5" />
-                                                    <span className="truncate max-w-[200px]">{event.location}</span>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="mt-auto pt-4 flex gap-3">
-                                            <Link href={`/dashboard/events/${event.id}`} className="flex-1">
-                                                <Button variant="outline" className="w-full rounded-xl border-black/10 bg-white/5 hover:bg-white/10 hover:text-foreground dark:border-white/10">
-                                                    Details
-                                                </Button>
-                                            </Link>
-                                            {status === 'approved' ? (
-                                                <Link href={`/dashboard/entries/${event.id}`}>
-                                                    <Button className="rounded-xl">
-                                                        Entries
-                                                        <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                                                    </Button>
-                                                </Link>
-                                            ) : (
-                                                <ApplyButton
-                                                    eventId={event.id}
-                                                    status={status}
-                                                />
-                                            )}
-                                        </div>
-                                    </div>
-                                )
-                            })}
-                            {(!activePublicEvents || activePublicEvents.length === 0) && (
-                                <div className="col-span-full py-12 text-center text-muted-foreground border border-dashed border-black/10 rounded-2xl bg-white/5 dark:border-white/10">
-                                    No active events found.
-                                </div>
-                            )}
-                        </div>
+                        <CoachActiveEventsCards
+                            events={activePublicEvents}
+                            statusByEventId={statusByEventId}
+                        />
                     </div>
                 </div>
             )}

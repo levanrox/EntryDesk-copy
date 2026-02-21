@@ -82,8 +82,8 @@ export function PublicEventsSection({
             <div className="space-y-12">
                 <EventSection
                     sectionId="upcoming-events"
-                    title="Upcoming events"
-                    subtitle="Find events and register your team"
+                    title="Live events"
+                    subtitle="Find events and login to register your team"
                     events={visibleUpcomingEvents}
                     hasAnyEvents={upcomingEvents.length > 0}
                     canViewAll={upcomingEvents.length > PREVIEW_COUNT}
@@ -123,7 +123,7 @@ export function PublicEventsSection({
                             <div className="space-y-3 border border-border/50 p-4 text-sm rounded-lg">
                                 <div className="flex items-center gap-2 text-muted-foreground">
                                     <Calendar className="h-4 w-4" />
-                                    <span>{formatDisplayDate(selectedEvent.start_date)}</span>
+                                    <span>{formatDisplayDateRange(selectedEvent.start_date, selectedEvent.end_date)}</span>
                                 </div>
                                 <div className="flex items-center gap-2 text-muted-foreground">
                                     <MapPin className="h-4 w-4" />
@@ -198,7 +198,7 @@ function EventSection({
                                     <div className="space-y-2 text-sm">
                                         <div className="flex items-center gap-2 text-muted-foreground">
                                             <Calendar className="h-4 w-4" />
-                                            <span>{formatDisplayDate(event.start_date)}</span>
+                                            <span>{formatDisplayDateRange(event.start_date, event.end_date)}</span>
                                         </div>
                                         <div className="flex items-center gap-2 text-muted-foreground">
                                             <MapPin className="h-4 w-4" />
@@ -253,4 +253,16 @@ function formatDisplayDate(isoDateString: string) {
     const month = String(date.getUTCMonth() + 1).padStart(2, '0')
     const year = date.getUTCFullYear()
     return `${day}/${month}/${year}`
+}
+
+function formatDisplayDateRange(startIsoDate: string, endIsoDate?: string | null) {
+    const start = formatDisplayDate(startIsoDate)
+    const effectiveEnd = endIsoDate || startIsoDate
+    const end = formatDisplayDate(effectiveEnd)
+
+    if (start === end) {
+        return start
+    }
+
+    return `${start} - ${end}`
 }

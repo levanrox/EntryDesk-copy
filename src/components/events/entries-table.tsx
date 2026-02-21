@@ -39,7 +39,7 @@ export function EntriesTable({ entries }: EntriesTableProps) {
     }
 
     const handleBulkUpdate = async (status: 'approved' | 'rejected') => {
-        if (!confirm(`Are you sure you want to ${status} ${selectedIds.size} entries?`)) return
+        if (!confirm(`Are you sure you want to ${status} ${selectedIds.size} entries? , please do verify the belt`)) return
 
         setIsBulkUpdating(true)
         try {
