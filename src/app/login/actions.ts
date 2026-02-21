@@ -1,7 +1,6 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
@@ -17,7 +16,7 @@ export async function login(formData: FormData) {
   })
 
   if (error) {
-    if (/invalid login credentials|invalid credentials/i.test(error.message)) {
+    if (/invalid login credentials/i.test(error.message)) {
       return redirect('/login?error=invalid_credentials&tab=login')
     }
     return redirect('/login?error=auth_failed&tab=login')
@@ -46,40 +45,27 @@ export async function signup(formData: FormData) {
   })
 
   if (error) {
-    return redirect('/login?error=signup_failed&tab=register')
+      return redirect('/login?error=signup_failed&tab=register')
   }
 
   revalidatePath('/', 'layout')
-  redirect('/login?message=check_email&tab=login')
+    redirect('/login?message=check_email&tab=login')
 }
 
 export async function loginWithGoogle() {
-  const headerStore = await headers()
-  const host = headerStore.get('x-forwarded-host') ?? headerStore.get('host')
-  const protocol = headerStore.get('x-forwarded-proto') ?? 'https'
-  const requestBaseUrl = host ? `${protocol}://${host}` : null
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? requestBaseUrl
+    const supabase = await createClient()
+    const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`,
+        },
+      })
 
-  if (!baseUrl) {
-    return redirect('/login?error=google_auth_failed&tab=login')
-  }
+    if (data.url) {
+      redirect(data.url)
+    }
 
-  const callbackUrl = new URL('/auth/callback', baseUrl)
-  callbackUrl.searchParams.set('next', '/dashboard')
-
-  const supabase = await createClient()
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: callbackUrl.toString(),
-    },
-  })
-
-  if (data.url) {
-    redirect(data.url)
-  }
-
-  if (error) {
-    return redirect('/login?error=google_auth_failed&tab=login')
-  }
+    if (error) {
+       return redirect('/login?error=google_auth_failed&tab=login')
+    }
 }

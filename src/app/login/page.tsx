@@ -25,7 +25,7 @@ function getSingleParam(value: string | string[] | undefined) {
 
 function getErrorMessage(errorCode?: string) {
     if (!errorCode) return null
-    if (errorCode === 'invalid_credentials') return 'Invalid username or password.'
+    if (errorCode === 'invalid_credentials') return 'Invalid email or password. Please try again.'
     if (errorCode === 'auth_failed') return 'Unable to sign in right now. Please try again.'
     if (errorCode === 'signup_failed') return 'Unable to create your account. Please review your details and retry.'
     if (errorCode === 'google_auth_failed') return 'Google sign-in could not be started. Please try again.'
@@ -112,15 +112,15 @@ export default async function LoginPage({
                     </div>
                 </section>
 
-                <section className="mx-auto w-full max-w-[460px] rounded-3xl border border-border/50 bg-card/70 p-6 shadow-sm backdrop-blur dark:border-white/[0.10] sm:p-8 lg:mx-0 lg:max-w-none">
+                <section className="rounded-3xl border border-border/50 bg-card/70 p-6 shadow-sm backdrop-blur dark:border-white/[0.10] sm:p-8">
                     {errorMessage ? (
-                        <div className="mb-4 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-700 dark:text-red-200">
+                        <div className="mb-4 rounded-xl border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-200">
                             {errorMessage}
                         </div>
                     ) : null}
 
                     {infoMessage ? (
-                        <div className="mb-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-700 dark:text-emerald-200">
+                        <div className="mb-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
                             {infoMessage}
                         </div>
                     ) : null}
