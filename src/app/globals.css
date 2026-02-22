@@ -70,7 +70,7 @@ html {
 
 .dark {
   /* Dark Mode Background: Slate 950 (#020617) */
-  --background: oklch(0.13 0.028 261.692);
+  --background: #071222;
   /* Approx #020617 */
 
   --foreground: oklch(0.985 0 0);

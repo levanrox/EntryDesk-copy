@@ -66,3 +66,33 @@ export function normalizeDobToIso(value: unknown): string | null {
 
     return null
 }
+
+function formatIsoDateParts(isoDate: string): string {
+    const [year, month, day] = isoDate.split('-')
+    return `${day}/${month}/${year}`
+}
+
+export function formatDateStable(value: string | Date): string {
+    if (value instanceof Date) {
+        if (Number.isNaN(value.getTime())) return ''
+        return new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC' }).format(value)
+    }
+
+    const normalized = String(value).trim()
+    if (!normalized) return ''
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+        return formatIsoDateParts(normalized)
+    }
+
+    const parsed = new Date(normalized)
+    if (Number.isNaN(parsed.getTime())) return normalized
+
+    return new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC' }).format(parsed)
+}
+
+export function formatDateRangeStable(startDate: string, endDate: string): string {
+    const start = formatDateStable(startDate)
+    const end = formatDateStable(endDate)
+    return start === end ? start : `${start} – ${end}`
+}

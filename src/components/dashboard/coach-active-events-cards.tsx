@@ -13,6 +13,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog'
+import { formatDateRangeStable } from '@/lib/date'
 
 type CoachActiveEvent = {
     id: string
@@ -153,9 +154,7 @@ function getStatusText(status: string | undefined) {
 }
 
 function formatDateRange(startDate: string, endDate: string) {
-    const start = new Date(startDate).toLocaleDateString()
-    const end = new Date(endDate).toLocaleDateString()
-    return start === end ? start : `${start} – ${end}`
+    return formatDateRangeStable(startDate, endDate)
 }
 
 function formatEventTypeLabel(eventType: string | null) {

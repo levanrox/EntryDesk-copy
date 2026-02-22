@@ -33,7 +33,7 @@ export default function LandingPage() {
 
             <section className="relative min-h-[88vh] overflow-hidden px-6 pb-20 pt-32 md:flex md:min-h-[92vh] md:items-center md:px-8 md:pb-24 md:pt-24 lg:min-h-screen lg:px-10 lg:pt-32 xl:px-12">
                 <Image
-                    src="/Hero image.webp"
+                    src="/hero-image-v2.webp"
                     alt="Karate athletes training"
                     fill
                     priority

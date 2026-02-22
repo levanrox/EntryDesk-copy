@@ -63,6 +63,7 @@ This doc captures the main issues encountered while setting up/running the app l
 - **15th session:** Integrated external Student Profile Portal (`testlist.shorinkai.in`) into landing UX with header link + dedicated section, then iteratively polished the mock preview (spacing, styling, and accent/avatar overlap fixes).
 - **17th session:** Fixed coach event visibility/actions so upcoming approved events also appear under Active Events with direct Entries navigation, and events auto-disappear after `end_date`.
 - **18th session:** Reworked landing-page render path for faster first paint (above-the-fold first, deferred below-the-fold), moved public events loading to post-render client fetch, fixed App Router dynamic import build issue, and stabilized `/api/public-events` with schema-correct query + scoped proxy behavior.
+- **19th session:** Polished dark-theme tone and landing hero refresh behavior, fixed dashboard hydration mismatch from locale-dependent date rendering, and rebuilt mock dashboard side-switch UX with modern indicator + interaction-aware auto-scroll timing.
 
 ## 1) Supabase migration error: `must be owner of table users`
 
@@ -1872,6 +1873,125 @@ This session focused on resolving coach dashboard confusion where approved upcom
 **Why this matches intended UX**
 - Aligns both **Approved** and **Active** displays with event lifecycle timing.
 - Prevents stale events from lingering in active surfaces.
+
+---------------------
+
+# Session 19 — Landing UI/Theme Polish + Hydration Stability (2026-02-22)
+
+This session focused on visual polish and interaction quality on the landing experience, plus SSR/client consistency fixes in dashboard date rendering.
+
+## 1) Dark background tuning (reduce glow)
+
+**Symptom**
+- Updated dark background felt too light/glowy in dashboard surfaces.
+
+**Fix**
+- Iteratively tuned dark mode base background from `#0a192f` → `#081427` → `#071222`.
+
+**Where**
+- `src/app/globals.css`
+
+**Why this is correct**
+- Preserves the navy theme direction while reducing luminous/halo perception.
+
+---
+
+## 2) Landing hero image not updating immediately
+
+**Symptom**
+- Replaced hero image did not appear immediately despite asset updates.
+
+**Root cause**
+- Cached optimized image persisted.
+- Query-string cache busting on local image path caused Next image local-pattern runtime validation error in this setup.
+
+**Fix**
+- Switched to versioned file-name cache busting.
+- Added `public/hero-image-v2.webp` and updated hero source to the versioned path.
+
+**Where**
+- `src/app/page.tsx`
+- `public/hero-image-v2.webp`
+
+**Why this is correct**
+- Versioned asset names are cache-safe and compatible with local image path restrictions.
+
+---
+
+## 3) Dashboard hydration mismatch from locale-dependent dates
+
+**Symptom**
+- Recoverable hydration warning due to server/client date text mismatch (e.g. `2/25/2026` vs `25/2/2026`).
+
+**Root cause**
+- `toLocaleDateString()` without fixed locale/timezone produced different output between environments.
+
+**Fix**
+- Added deterministic date helpers and stable range formatting.
+- Replaced locale-implicit dashboard date rendering in affected components.
+
+**Where**
+- `src/lib/date.ts`
+- `src/components/dashboard/coach-active-events-cards.tsx`
+- `src/app/dashboard/page.tsx`
+
+**Why this is correct**
+- Ensures SSR and client render identical date strings, preventing hydration drift.
+
+---
+
+## 4) Mock dashboard preview side-switch UX rework
+
+**Symptom**
+- Requested behavior was side switching between full Coach/Organizer dashboards, not internal metric-row scrolling.
+
+**Fix**
+- Rebuilt preview as a two-panel horizontal snap viewport (full-width Coach + Organizer panels).
+- Wired top toggle buttons to controlled horizontal panel switching.
+
+**Where**
+- `src/components/app/landing-ui-preview.tsx`
+
+**Why this is correct**
+- Matches intended interaction model and keeps switch behavior explicit and predictable.
+
+---
+
+## 5) Modern minimal navigation indicator + improved auto-switch behavior
+
+**Symptom**
+- Native scrollbar looked visually heavy.
+- Auto-switch could interrupt manual reading by switching back too quickly.
+
+**Fix**
+- Hid native horizontal scrollbar and added minimal two-pill indicator matching active panel.
+- Implemented interaction-aware auto scheduling:
+  - initial auto switch after visibility delay,
+  - ongoing Coach/Organizer switching,
+  - manual interaction pauses auto movement,
+  - auto resumes only after 4.5s inactivity.
+
+**Where**
+- `src/components/app/landing-ui-preview.tsx`
+
+**Why this is correct**
+- Preserves discoverability through motion while respecting user control/read time.
+
+---
+
+## 6) Preview panel fill-gap cleanup
+
+**Symptom**
+- Organizer side could show dead vertical space in the preview body.
+
+**Fix**
+- Converted preview wrappers to full-height flex columns and expanded lower content blocks with `flex-1`.
+
+**Where**
+- `src/components/app/landing-ui-preview.tsx`
+
+**Why this is correct**
+- Produces consistent panel fill and avoids empty visual gaps while keeping existing layout style.
 
 ---
 
