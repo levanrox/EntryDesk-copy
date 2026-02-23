@@ -71,7 +71,7 @@ export function LandingHeader() {
                         Events
                     </a>
                     <a
-                        href="https://testlist.shorinkai.in"
+                        href="https://honorlog.shorinkai.in"
                         target="_blank"
                         rel="noreferrer"
                         className={navLinkClassName}
