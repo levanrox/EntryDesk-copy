@@ -70,6 +70,10 @@ This doc captures the main issues encountered while setting up/running the app l
 - **20th session:** Synced Students dojo filter to URL and reset pagination on filter change (with global navigation loader).
 - **20th session:** Centralized profile display-name derivation for OAuth and improved profile auto-create/update behavior (role + full_name).
 
+- **21st session:** Added shimmer-based `Skeleton` UI primitive and global CSS animation for consistent skeleton loading states.
+- **21st session:** Replaced the dashboard root loading screen with a skeleton layout matching the home bento + list surfaces.
+- **21st session:** Added route-level skeleton `loading.tsx` for Entries, Events, Events Browser, and Students.
+
 ## 1) Supabase migration error: `must be owner of table users`
 
 **Symptom**
@@ -4118,3 +4122,42 @@ This session focused on making student management “dojo-aware” end-to-end (d
 - `src/lib/auth/profile.ts`
 - `src/lib/auth/require-role.ts`
 - `src/app/dashboard/events-browser/actions/index.ts`
+
+---
+
+# Session 21 — Skeleton Loading States + Shimmer UI (2026-02-26)
+
+This session focused on improving perceived performance by using skeleton placeholders (instead of blank/spinners) across key dashboard routes.
+
+## 1) Added a `Skeleton` primitive + shimmer animation
+
+**Change**
+- Added a reusable `Skeleton` component backed by a `.shimmer` utility class.
+- Added `.shimmer` styles + keyframes in global CSS for both light and dark theme.
+
+**Where**
+- `src/components/ui/skeleton.tsx`
+- `src/app/globals.css`
+
+---
+
+## 2) Dashboard root loading now matches dashboard layout
+
+**Change**
+- Replaced the previous dashboard loading component with a structured skeleton: page header, bento-style cards, and list rows.
+
+**Where**
+- `src/app/dashboard/loading.tsx`
+
+---
+
+## 3) Added route-level loading skeletons for major dashboard pages
+
+**Change**
+- Added dedicated route-level `loading.tsx` skeletons so each section shows an immediate, layout-accurate placeholder while server components stream.
+
+**Where**
+- `src/app/dashboard/entries/loading.tsx`
+- `src/app/dashboard/events/loading.tsx`
+- `src/app/dashboard/events-browser/loading.tsx`
+- `src/app/dashboard/students/loading.tsx`
