@@ -65,6 +65,11 @@ This doc captures the main issues encountered while setting up/running the app l
 - **18th session:** Reworked landing-page render path for faster first paint (above-the-fold first, deferred below-the-fold), moved public events loading to post-render client fetch, fixed App Router dynamic import build issue, and stabilized `/api/public-events` with schema-correct query + scoped proxy behavior.
 - **19th session:** Polished dark-theme tone and landing hero refresh behavior, fixed dashboard hydration mismatch from locale-dependent date rendering, and rebuilt mock dashboard side-switch UX with modern indicator + interaction-aware auto-scroll timing.
 
+- **20th session:** Made Dojo cards deep-link to Students with dojo filtering via `?dojo=`.
+- **20th session:** Added dojo-scoped Students view (server-side query filter) and preselected dojo in Add Student + Bulk Upload.
+- **20th session:** Synced Students dojo filter to URL and reset pagination on filter change (with global navigation loader).
+- **20th session:** Centralized profile display-name derivation for OAuth and improved profile auto-create/update behavior (role + full_name).
+
 ## 1) Supabase migration error: `must be owner of table users`
 
 **Symptom**
@@ -4031,3 +4036,85 @@ This session focused on resolving coach dashboard confusion where approved upcom
 **Why this matches intended UX**
 - Aligns both **Approved** and **Active** displays with event lifecycle timing.
 - Prevents stale events from lingering in active surfaces.
+
+---
+
+## 4) How Google OAuth Is Configured
+
+In the code, there should be a proper redirect callback configured.
+
+The app requests Supabase to redirect to `/auth/callback`.
+The app then implements the `/auth/callback` route and exchanges the returned authorization code for a session cookie.
+
+### ⚠️ Important Gotcha
+
+The main **gotcha** is environment correctness.
+
+`NEXT_PUBLIC_BASE_URL` must **exactly match** the real site origin you are using (including scheme and host).
+
+For example:
+
+```
+https://yourdomain.com
+```
+
+Make sure:
+
+* The protocol matches (`http` vs `https`)
+* The domain matches exactly
+* There are no extra trailing slashes or mismatched subdomains
+
+---
+
+# Session 20 — Dojo-Scoped Students + Auth Profile Name Helper (2026-02-26)
+
+This session focused on making student management “dojo-aware” end-to-end (deep-links + filtering + preselected forms) and consolidating profile display-name logic for OAuth.
+
+## 1) Dojo cards deep-link to Students with an active filter
+
+**Change**
+- Dojo cards now link to `/dashboard/students?dojo={dojoName}`.
+- The card is fully clickable while keeping action buttons (edit/delete) usable.
+
+**Where**
+- `src/app/dashboard/dojos/page.tsx`
+
+---
+
+## 2) Students page supports `?dojo=` and preselects dojo in create flows
+
+**Change**
+- Reads `dojo` from `searchParams`, resolves it to a dojo id, and filters the Supabase students query by `dojo_id`.
+- Passes the selected dojo through to:
+  - Add Student dialog (defaults the dojo)
+  - Bulk upload dialog (defaults the dojo)
+
+**Where**
+- `src/app/dashboard/students/page.tsx`
+- `src/components/students/student-dialog.tsx`
+- `src/components/students/student-bulk-upload.tsx`
+
+---
+
+## 3) Students dojo filter is URL-synced and paging-safe
+
+**Change**
+- The dojo filter dropdown is now controlled and synced from the URL (`dojo=`) or server-provided initial filter.
+- Changing dojo updates the URL, clears `page`, and triggers the global navigation loader for instant feedback.
+
+**Where**
+- `src/components/students/student-data-table.tsx`
+
+---
+
+## 4) Unified profile display-name derivation + safer profile auto-create
+
+**Change**
+- Added a shared helper to derive a best-effort `full_name` from Supabase user metadata/identity data (and avoid role-like placeholders).
+- When auto-creating `public.profiles`, the insert now includes `role: 'coach'` consistently.
+- If an existing profile has a placeholder-ish name (e.g. `coach`, `organizer`, or email local-part), it is updated opportunistically when a better OAuth name becomes available.
+
+**Where**
+- `src/lib/auth/profile.ts`
+- `src/lib/auth/require-role.ts`
+- `src/app/dashboard/events-browser/actions/index.ts`

@@ -1,7 +1,8 @@
 
+
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
     Dialog,
@@ -30,6 +31,7 @@ interface Dojo {
 
 interface StudentBulkUploadProps {
     dojos: Dojo[]
+    initialDojoId?: string
 }
 
 interface ParsedStudent {
@@ -46,17 +48,22 @@ interface ParsedStudent {
 
 const VALID_RANKS = ['white', 'yellow', 'orange', 'green', 'blue', 'purple', 'brown', 'black', 'shodan', 'nidan', 'sandan'];
 
-export function StudentBulkUpload({ dojos }: StudentBulkUploadProps) {
+export function StudentBulkUpload({ dojos, initialDojoId }: StudentBulkUploadProps) {
     const [open, setOpen] = useState(false)
     const [file, setFile] = useState<File | null>(null)
     const [parsedData, setParsedData] = useState<ParsedStudent[]>([])
     const [selectedRowIds, setSelectedRowIds] = useState<Set<number>>(new Set())
-    const [selectedDojo, setSelectedDojo] = useState<string>('')
+    const [selectedDojo, setSelectedDojo] = useState<string>(initialDojoId || '')
     const [isUploading, setIsUploading] = useState(false)
     const [cancelRequestedUi, setCancelRequestedUi] = useState(false)
     const [step, setStep] = useState<'upload' | 'review'>('upload')
 
     const cancelRequestedRef = useRef(false)
+
+    useEffect(() => {
+        if (!initialDojoId) return
+        setSelectedDojo((prev) => (prev ? prev : initialDojoId))
+    }, [initialDojoId])
 
     const handleDownloadTemplate = () => {
         const headers = ['Name', 'Gender', 'Rank', 'Weight', 'Date of Birth'];

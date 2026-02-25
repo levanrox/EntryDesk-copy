@@ -5,6 +5,7 @@ import { DojoDialog } from '@/components/dojos/dojo-dialog'
 import { DojoActions } from '@/components/dojos/dojo-actions'
 import { DashboardPageHeader } from '@/components/dashboard/page-header'
 import { PaginationControls } from '@/components/ui/pagination-controls'
+import Link from 'next/link'
 
 export default async function DojosPage({
     searchParams,
@@ -47,10 +48,16 @@ export default async function DojosPage({
                     dojos.map((dojo) => (
                         <div
                             key={dojo.id}
-                            className="dashboard-surface dashboard-list-item group p-3"
+                            className="dashboard-surface dashboard-list-item group relative p-3"
                         >
+                            <Link
+                                href={{ pathname: '/dashboard/students', query: { dojo: dojo.name } }}
+                                className="absolute inset-0 z-10"
+                            >
+                                <span className="sr-only">View students for {dojo.name}</span>
+                            </Link>
                             <div className="flex items-start justify-between gap-2">
-                                <div className="flex items-center gap-2">
+                                <div className="pointer-events-none relative z-20 flex items-center gap-2">
                                     <div className="flex h-7 w-7 items-center justify-center rounded-md bg-muted">
                                         <LayoutGrid className="h-3.5 w-3.5 text-muted-foreground" />
                                     </div>
@@ -58,12 +65,13 @@ export default async function DojosPage({
                                         <div className="text-sm font-medium">{dojo.name}</div>
                                         <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                                             <Users className="h-2.5 w-2.5" />
-                                            {/* @ts-ignore */}
                                             <span>{dojo.students?.[0]?.count || 0} students</span>
                                         </div>
                                     </div>
                                 </div>
-                                <DojoActions dojo={dojo} />
+                                <div className="relative z-20">
+                                    <DojoActions dojo={dojo} />
+                                </div>
                             </div>
                         </div>
                     ))
