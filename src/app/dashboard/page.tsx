@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ArrowRight, Calendar, Users, ClipboardList, LayoutGrid, CheckSquare, FolderOpen, ListTodo, MapPin, CheckCircle2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { CoachActiveEventsCards } from '@/components/dashboard/coach-active-events-cards'
+import { formatDateRangeStable } from '@/lib/date'
 
 type PublicEvent = {
     id: string
@@ -376,7 +377,7 @@ export default async function DashboardPage() {
                                                     ) : null}
                                                 </div>
                                                 <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
-                                                    <span>{new Date(event.start_date).toLocaleDateString()} – {new Date(event.end_date).toLocaleDateString()}</span>
+                                                    <span>{formatDateRangeStable(event.start_date, event.end_date)}</span>
                                                     {event.location ? (
                                                         <>
                                                             <span>•</span>
@@ -444,7 +445,7 @@ export default async function DashboardPage() {
                                                     <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                                                         <span className="flex items-center gap-0.5">
                                                             <Calendar className="h-2.5 w-2.5" />
-                                                            {new Date(event.start_date).toLocaleDateString()} – {new Date(event.end_date ?? event.start_date).toLocaleDateString()}
+                                                            {formatDateRangeStable(event.start_date, event.end_date ?? event.start_date)}
                                                         </span>
                                                         {event.location && (
                                                             <>

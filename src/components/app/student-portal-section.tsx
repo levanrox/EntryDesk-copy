@@ -43,12 +43,12 @@ export function StudentPortalSection() {
 
                         <div className="mt-7 flex flex-wrap items-center gap-3">
                             <Button asChild className="h-11 gap-2 rounded-md px-6 text-base">
-                                <a href="https://testlist.shorinkai.in" target="_blank" rel="noreferrer">
+                                <a href="https://honorlog.shorinkai.in" target="_blank" rel="noreferrer">
                                     Open Student Portal
                                     <ArrowUpRight className="h-4 w-4" />
                                 </a>
                             </Button>
-                            <p className="text-sm text-muted-foreground">Live at testlist.shorinkai.in</p>
+                            <p className="text-sm text-muted-foreground">Live at honorlog.shorinkai.in</p>
                         </div>
                     </div>
 
