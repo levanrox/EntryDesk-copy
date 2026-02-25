@@ -1,6 +1,8 @@
+
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import {
     ColumnDef,
     flexRender,
@@ -33,6 +35,7 @@ import { StudentActions } from './student-actions'
 import { Search, ChevronDown, ArrowUpDown } from 'lucide-react'
 import Fuse from 'fuse.js'
 import { normalizeDobToIso } from '@/lib/date'
+import { useAppNavigation } from '@/components/app/navigation-provider'
 
 interface Student {
     id: string
@@ -49,14 +52,21 @@ interface Student {
 interface StudentDataTableProps {
     data: Student[]
     dojos: { id: string, name: string }[]
+    initialDojoFilter?: string
 }
 
-export function StudentDataTable({ data, dojos }: StudentDataTableProps) {
+export function StudentDataTable({ data, dojos, initialDojoFilter }: StudentDataTableProps) {
+    const router = useRouter()
+    const searchParams = useSearchParams()
+    const { beginNavigation } = useAppNavigation()
+
     const [sorting, setSorting] = useState<SortingState>([])
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
     const [rowSelection, setRowSelection] = useState({})
     const [globalFilter, setGlobalFilter] = useState('')
+
+    const [dojoFilter, setDojoFilter] = useState<string>('all')
 
     // Fuse.js instance for fuzzy search
     const fuse = useMemo(() => new Fuse(data, {
@@ -158,8 +168,19 @@ export function StudentDataTable({ data, dojos }: StudentDataTableProps) {
 
     // Filter Handlers
     const setFilter = (columnId: string, value: string) => {
-        table.getColumn(columnId)?.setFilterValue(value === "all" ? "" : value)
+        table.getColumn(columnId)?.setFilterValue(value === 'all' ? undefined : value)
     }
+
+    useEffect(() => {
+        const urlDojo = searchParams.get('dojo')
+        const desired = urlDojo ?? initialDojoFilter ?? 'all'
+
+        const exists = desired !== 'all' && dojos.some((d) => d.name === desired)
+        const next = exists ? desired : 'all'
+
+        setDojoFilter(next)
+        table.getColumn('dojo')?.setFilterValue(next === 'all' ? undefined : next)
+    }, [dojos, initialDojoFilter, searchParams, table])
 
     return (
         <div className="w-full space-y-4">
@@ -178,7 +199,23 @@ export function StudentDataTable({ data, dojos }: StudentDataTableProps) {
 
                 {/* Filters Row */}
                 <div className="flex flex-wrap items-center gap-2">
-                    <Select onValueChange={(val) => setFilter("dojo", val)}>
+                    <Select
+                        value={dojoFilter}
+                        onValueChange={(val) => {
+                            setDojoFilter(val)
+                            setFilter("dojo", val)
+
+                            const params = new URLSearchParams(searchParams)
+                            if (val === 'all') params.delete('dojo')
+                            else params.set('dojo', val)
+
+                            // Reset paging when switching filters.
+                            params.delete('page')
+
+                            beginNavigation()
+                            router.push(`?${params.toString()}`)
+                        }}
+                    >
                         <SelectTrigger className="h-11 w-[140px] rounded-full">
                             <SelectValue placeholder="All Dojos" />
                         </SelectTrigger>

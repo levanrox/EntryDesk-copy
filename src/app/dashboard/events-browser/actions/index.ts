@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/require-role'
+import { deriveFullName } from '@/lib/auth/profile'
 
 export async function applyToEvent(eventId: string) {
   const { supabase, user } = await requireRole('coach')
@@ -25,15 +26,11 @@ export async function applyToEvent(eventId: string) {
       throw new Error('Missing email on user; cannot create profile')
     }
 
-    // Best-effort display name for UI.
-    // Supabase may store name in user_metadata depending on provider.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const meta = (user as any)?.user_metadata as any
-    const fullName = (meta?.full_name || meta?.name || meta?.display_name || email.split('@')[0]) as string
+    const fullName = deriveFullName(user)
 
     const { error: createProfileError } = await supabase
       .from('profiles')
-      .insert({ id: user.id, email, full_name: fullName })
+      .insert({ id: user.id, email, role: 'coach', full_name: fullName })
 
     if (createProfileError) {
       console.error(createProfileError)

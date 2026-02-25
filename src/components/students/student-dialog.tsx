@@ -46,11 +46,12 @@ interface StudentDialogProps {
     open?: boolean
     onOpenChange?: (open: boolean) => void
     showTrigger?: boolean
+    initialDojoId?: string
     entry?: any
     eventDays?: any[]
 }
 
-export function StudentDialog({ dojos, student, open, onOpenChange, showTrigger = true, entry, eventDays }: StudentDialogProps) {
+export function StudentDialog({ dojos, student, open, onOpenChange, showTrigger = true, initialDojoId, entry, eventDays }: StudentDialogProps) {
     const [internalOpen, setInternalOpen] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -60,7 +61,7 @@ export function StudentDialog({ dojos, student, open, onOpenChange, showTrigger 
 
     const isEditing = !!student
 
-    const [selectedDojo, setSelectedDojo] = useState<string>(student?.dojo_id || '')
+    const [selectedDojo, setSelectedDojo] = useState<string>(student?.dojo_id || initialDojoId || '')
     const [selectedGender, setSelectedGender] = useState<string>(student?.gender || '')
     const [selectedRank, setSelectedRank] = useState<string>(student?.rank || '')
     const [name, setName] = useState<string>(student?.name || '')
@@ -82,9 +83,12 @@ export function StudentDialog({ dojos, student, open, onOpenChange, showTrigger 
                 setEntryDayId(entry.event_day_id || '')
                 setEntryType(entry.participation_type || '')
             }
+        } else if (show && !student) {
+            // Create mode: prefer the dojo we navigated in with.
+            setSelectedDojo(initialDojoId || '')
         } else if (!show && !student) {
             // Reset form when closing in create mode
-            setSelectedDojo('')
+            setSelectedDojo(initialDojoId || '')
             setSelectedGender('')
             setSelectedRank('')
             setName('')
@@ -93,7 +97,7 @@ export function StudentDialog({ dojos, student, open, onOpenChange, showTrigger 
             setEntryDayId('')
             setEntryType('')
         }
-    }, [show, student, entry])
+    }, [show, student, entry, initialDojoId])
 
     const handleSubmit = async (formData: FormData) => {
         // Append all current state values to formData

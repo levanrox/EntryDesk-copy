@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { cache } from 'react'
+import { deriveFullName, looksLikeRoleName } from '@/lib/auth/profile'
 
 export type UserRole = 'organizer' | 'coach' | 'admin'
 
@@ -34,13 +35,11 @@ export const getUserProfile = cache(async () => {
             throw new Error('Missing email on user; cannot create profile')
         }
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const meta = (user as any)?.user_metadata as any
-        const fullName = (meta?.full_name || meta?.name || meta?.display_name || email.split('@')[0]) as string
+        const fullName = deriveFullName(user)
 
         const { error: createProfileError } = await supabase
             .from('profiles')
-            .insert({ id: user.id, email, full_name: fullName })
+            .insert({ id: user.id, email, role: 'coach', full_name: fullName })
 
         if (createProfileError) {
             throw new Error(createProfileError.message)
@@ -57,6 +56,28 @@ export const getUserProfile = cache(async () => {
         }
 
         profile = createdProfile
+    } else {
+        // If the profile was auto-created earlier with a placeholder name, sync it
+        // from Google identity / user_metadata when available.
+        const desiredFullName = deriveFullName(user)
+        const emailLocalPart = user.email ? user.email.split('@')[0] : null
+        const currentFullName = profile.full_name
+
+        const currentLooksAuto =
+            !currentFullName ||
+            looksLikeRoleName(currentFullName) ||
+            (emailLocalPart ? currentFullName === emailLocalPart : false)
+
+        if (currentLooksAuto && desiredFullName && desiredFullName !== currentFullName) {
+            const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ full_name: desiredFullName })
+                .eq('id', user.id)
+
+            if (!updateError) {
+                profile = { ...profile, full_name: desiredFullName }
+            }
+        }
     }
 
     const role = (profile?.role as UserRole) || 'coach'
