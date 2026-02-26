@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -29,6 +29,7 @@ interface DojoDialogProps {
 export function DojoDialog({ dojo, children, open, onOpenChange }: DojoDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const submitLockRef = useRef(false)
   const isEditing = !!dojo
 
   // Handle both controlled and uncontrolled state
@@ -36,6 +37,8 @@ export function DojoDialog({ dojo, children, open, onOpenChange }: DojoDialogPro
   const setShow = onOpenChange || setIsOpen
 
   const handleSubmit = async (formData: FormData) => {
+    if (submitLockRef.current || isSubmitting) return;
+    submitLockRef.current = true;
     setIsSubmitting(true)
     try {
       if (isEditing) {
@@ -49,6 +52,7 @@ export function DojoDialog({ dojo, children, open, onOpenChange }: DojoDialogPro
       const message = error instanceof Error ? error.message : 'Failed to save dojo'
       alert(message)
     } finally {
+      submitLockRef.current = false;
       setIsSubmitting(false)
     }
   }

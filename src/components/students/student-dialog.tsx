@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import {
     Dialog,
@@ -54,6 +54,7 @@ interface StudentDialogProps {
 export function StudentDialog({ dojos, student, open, onOpenChange, showTrigger = true, initialDojoId, entry, eventDays }: StudentDialogProps) {
     const [internalOpen, setInternalOpen] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const submitLockRef = useRef(false)
 
     // Controlled vs Uncontrolled logic
     const show = open !== undefined ? open : internalOpen
@@ -100,6 +101,8 @@ export function StudentDialog({ dojos, student, open, onOpenChange, showTrigger 
     }, [show, student, entry, initialDojoId])
 
     const handleSubmit = async (formData: FormData) => {
+        if (submitLockRef.current || isSubmitting) return;
+        submitLockRef.current = true;
         // Append all current state values to formData
         formData.append('name', name)
         formData.append('dojo_id', selectedDojo)
@@ -132,6 +135,7 @@ export function StudentDialog({ dojos, student, open, onOpenChange, showTrigger 
         } catch (error) {
             alert('Failed to save student')
         } finally {
+            submitLockRef.current = false;
             setIsSubmitting(false)
         }
     }
