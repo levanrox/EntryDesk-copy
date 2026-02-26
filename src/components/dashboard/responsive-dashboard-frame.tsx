@@ -152,7 +152,7 @@ export function ResponsiveDashboardFrame({
                 </aside>
 
                 <div className="flex min-w-0 flex-1 flex-col">
-                    <div className="sticky top-0 z-10 border-b bg-background/60 backdrop-blur-xl md:hidden">
+                    <div className="sticky top-0 z-[40] border-b border-border/50 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/40 md:hidden dark:border-white/[0.05]">
                         <div className="flex h-14 items-center justify-between px-4">
                             <div className="flex items-center gap-2">
                                 <MobileNav role={role} profile={{ full_name: profileFullName }} userEmail={userEmail} />

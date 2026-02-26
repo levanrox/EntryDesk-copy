@@ -74,6 +74,11 @@ This doc captures the main issues encountered while setting up/running the app l
 - **21st session:** Replaced the dashboard root loading screen with a skeleton layout matching the home bento + list surfaces.
 - **21st session:** Added route-level skeleton `loading.tsx` for Entries, Events, Events Browser, and Students.
 
+- **22nd session:** Improved coach “Register athletes” dialog sizing/scrolling to work better on mobile and small viewports.
+- **22nd session:** Made coach register filters/action bar responsive (full-width controls, horizontal scroll where needed) and allowed table horizontal scroll.
+- **22nd session:** Tuned dashboard mobile header stacking (z-index/borders) and reduced mobile drawer width for better content context.
+- **22nd session:** Minor copy polish on dashboard Students metric (“Total Athletes”).
+
 ## 1) Supabase migration error: `must be owner of table users`
 
 **Symptom**
@@ -4161,3 +4166,51 @@ This session focused on improving perceived performance by using skeleton placeh
 - `src/app/dashboard/events/loading.tsx`
 - `src/app/dashboard/events-browser/loading.tsx`
 - `src/app/dashboard/students/loading.tsx`
+
+---
+
+# Session 22 — Coach Register UX + Mobile Nav Polish (2026-02-26)
+
+This session focused on tightening the coach registration UX on small screens and polishing the dashboard’s mobile navigation/header layering.
+
+## 1) Coach “Register athletes” dialog is viewport-friendly
+
+**Change**
+- Updated the register dialog to use viewport-aware width and max-height, with scrolling enabled so the form stays usable on smaller devices.
+
+**Where**
+- `src/components/coach/coach-dashboard.tsx`
+
+---
+
+## 2) Coach register filters/action bar/table are responsive
+
+**Change**
+- Filters bar now stacks nicely on mobile and uses full-width inputs/selects.
+- Action controls (event day + participation + add) handle narrow screens via horizontal scrolling and tighter button copy.
+- Table container now supports horizontal scrolling with a sensible minimum table width.
+
+**Where**
+- `src/components/coach/coach-student-register.tsx`
+
+---
+
+## 3) Mobile nav + header layering polish
+
+**Change**
+- Reduced mobile drawer width so it doesn’t fully cover the screen on small devices.
+- Increased mobile header z-index and refined border/background styles to prevent overlay/clipping issues.
+
+**Where**
+- `src/components/dashboard/mobile-nav.tsx`
+- `src/components/dashboard/responsive-dashboard-frame.tsx`
+
+---
+
+## 4) Small dashboard copy improvement
+
+**Change**
+- Renamed Students metric helper text from “Total registered” → “Total Athletes”.
+
+**Where**
+- `src/app/dashboard/page.tsx`
