@@ -50,7 +50,7 @@ export function MobileNav({ role, profile, userEmail }: MobileNavProps) {
 
             <SheetContent
                 side="left"
-                className="w-full max-w-full sm:w-[350px] sm:max-w-sm p-0"
+                className="w-[85vw] max-w-[320px] sm:w-[350px] sm:max-w-sm p-0"
             >
                 {/* ✅ Required for Radix accessibility */}
                 <SheetTitle className="sr-only">

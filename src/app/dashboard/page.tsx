@@ -293,7 +293,7 @@ export default async function DashboardPage() {
                                     <span className="text-xs font-semibold uppercase tracking-wider">Students</span>
                                 </div>
                                 <div className="text-3xl font-bold tabular-nums text-foreground">{studentsCount ?? 0}</div>
-                                <div className="mt-1 text-xs text-muted-foreground font-medium">Total registered</div>
+                                <div className="mt-1 text-xs text-muted-foreground font-medium">Total Athletes</div>
                             </div>
                         </Link>
 

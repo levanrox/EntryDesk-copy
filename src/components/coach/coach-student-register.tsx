@@ -141,18 +141,19 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
             />
 
             {/* Filters Bar */}
-            <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/[0.10] bg-muted/20 p-3">
-                <Filter className="h-4 w-4 text-muted-foreground mr-1" />
-
-                <Input
-                    placeholder="Search name..."
-                    className="h-11 w-[190px] rounded-full lg:w-[260px]"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 rounded-2xl border border-white/[0.10] bg-muted/20 p-3">
+                <div className="flex items-center gap-2 w-full sm:w-auto flex-1 md:flex-initial">
+                    <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <Input
+                        placeholder="Search name..."
+                        className="h-11 w-full sm:w-[190px] lg:w-[260px] rounded-full"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                </div>
 
                 <Select value={filterGender} onValueChange={setFilterGender}>
-                    <SelectTrigger className="h-11 w-[130px] rounded-full">
+                    <SelectTrigger className="h-11 w-full sm:w-[130px] rounded-full">
                         <SelectValue placeholder="Gender" />
                     </SelectTrigger>
                     <SelectContent>
@@ -163,7 +164,7 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
                 </Select>
 
                 <Select value={filterRank} onValueChange={setFilterRank}>
-                    <SelectTrigger className="h-11 w-[150px] rounded-full">
+                    <SelectTrigger className="h-11 w-full sm:w-[150px] rounded-full">
                         <SelectValue placeholder="Rank" />
                     </SelectTrigger>
                     <SelectContent>
@@ -175,7 +176,7 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
                 </Select>
 
                 <Select value={filterDojo} onValueChange={setFilterDojo}>
-                    <SelectTrigger className="h-11 w-[160px] rounded-full">
+                    <SelectTrigger className="h-11 w-full sm:w-[160px] rounded-full">
                         <SelectValue placeholder="Dojo" />
                     </SelectTrigger>
                     <SelectContent>
@@ -189,48 +190,52 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
 
             {/* Action Bar */}
             <div className="flex flex-col justify-between gap-4 rounded-2xl border border-white/[0.10] bg-muted/10 px-3 py-3 md:flex-row md:items-center">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between sm:justify-start gap-2">
                     <span className="text-sm font-medium text-muted-foreground">Selection:</span>
-                    <span className="text-sm font-bold">{selectedIds.size}</span>
-                    <span className="text-sm text-muted-foreground">students</span>
+                    <div>
+                        <span className="text-sm font-bold">{selectedIds.size}</span>
+                        <span className="text-sm text-muted-foreground ml-1">students</span>
+                    </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    {/* Event Day Selector (Conditional) */}
-                    {eventDays.length > 0 && (
-                        <Select value={selectedDayId} onValueChange={setSelectedDayId}>
-                            <SelectTrigger className="w-[180px] rounded-full border-white/[0.12] bg-background/50">
-                                <SelectValue placeholder="Select Day (Required)" />
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto overflow-x-auto pb-1 sm:pb-0">
+                    <div className="flex gap-2 min-w-max">
+                        {/* Event Day Selector (Conditional) */}
+                        {eventDays.length > 0 && (
+                            <Select value={selectedDayId} onValueChange={setSelectedDayId}>
+                                <SelectTrigger className="w-[140px] sm:w-[180px] rounded-full border-white/[0.12] bg-background/50">
+                                    <SelectValue placeholder="Select Day (Required)" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all" disabled>Select Day...</SelectItem>
+                                    {eventDays.map(day => (
+                                        <SelectItem key={day.id} value={day.id}>{day.name || day.date}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        )}
+
+                        <Select value={participationType} onValueChange={setParticipationType}>
+                            <SelectTrigger className="w-[110px] sm:w-[140px] rounded-full">
+                                <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all" disabled>Select Day...</SelectItem>
-                                {eventDays.map(day => (
-                                    <SelectItem key={day.id} value={day.id}>{day.name || day.date}</SelectItem>
-                                ))}
+                                <SelectItem value="both">Both</SelectItem>
+                                <SelectItem value="kata">Kata</SelectItem>
+                                <SelectItem value="kumite">Kumite</SelectItem>
                             </SelectContent>
                         </Select>
-                    )}
 
-                    <Select value={participationType} onValueChange={setParticipationType}>
-                        <SelectTrigger className="w-[140px] rounded-full">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="both">Both</SelectItem>
-                            <SelectItem value="kata">Kata</SelectItem>
-                            <SelectItem value="kumite">Kumite</SelectItem>
-                        </SelectContent>
-                    </Select>
-
-                    <Button size="sm" onClick={handleAdd} disabled={isAdding || selectedIds.size === 0} className="min-w-[120px] rounded-full bg-emerald-600 hover:bg-emerald-700">
-                        {isAdding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <PlusCircle className="h-4 w-4 mr-2" />}
-                        Add to Event
-                    </Button>
+                        <Button size="sm" onClick={handleAdd} disabled={isAdding || selectedIds.size === 0} className="min-w-[120px] rounded-full bg-emerald-600 hover:bg-emerald-700">
+                            {isAdding ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <PlusCircle className="h-4 w-4 mr-2" />}
+                            Add
+                        </Button>
+                    </div>
                 </div>
             </div>
 
-            <div className="relative h-[400px] w-full overflow-auto rounded-2xl border border-white/[0.10] bg-background/20 dark:bg-white/[0.02]">
-                <table className="w-full caption-bottom text-sm text-left">
+            <div className="relative h-[400px] w-full overflow-x-auto overflow-y-auto rounded-2xl border border-white/[0.10] bg-background/20 dark:bg-white/[0.02]">
+                <table className="w-full min-w-[600px] caption-bottom text-sm text-left">
                     <thead className="sticky top-0 z-10 bg-muted/35 backdrop-blur-sm [&_tr]:border-b">
                         <tr className="border-b border-white/[0.12] transition-colors hover:bg-muted/45 data-[state=selected]:bg-muted">
                             <th className="h-12 px-4 align-middle w-[50px]">
