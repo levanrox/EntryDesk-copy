@@ -36,7 +36,7 @@ export default async function EventEntriesPage({ params }: { params: { eventId: 
     .from('entries')
     .select(`
         *,
-        students(id, name, gender, rank, weight, date_of_birth, dojo_id),
+        students(id, name, gender, rank, weight, date_of_birth, dojo_id, registration_no),
         event_days(name)
     `)
     .eq('event_id', eventId)

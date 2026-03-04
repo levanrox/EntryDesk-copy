@@ -54,10 +54,12 @@ export default async function EventEntriesPage({
         event_id: e.event_id,
         status: e.status,
         participation_type: e.participation_type,
+        chest_no: e.chest_no,
         students: {
             name: e.student_name,
             rank: e.student_rank,
             weight: e.student_weight,
+            registration_no: e.student_registration_no,
             dojos: { name: e.dojo_name }
         },
         categories: e.category_name ? { name: e.category_name } : null,

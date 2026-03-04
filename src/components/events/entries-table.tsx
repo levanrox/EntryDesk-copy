@@ -88,6 +88,7 @@ export function EntriesTable({ entries }: EntriesTableProps) {
                                     }}
                                 />
                             </th>
+                            <th className="h-12 px-4 align-middle font-medium text-muted-foreground w-[80px]">Chest</th>
                             <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Student</th>
                             <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Dojo</th>
                             <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Category</th>
@@ -99,7 +100,7 @@ export function EntriesTable({ entries }: EntriesTableProps) {
                     <tbody className="[&_tr:last-child]:border-0">
                         {entries.length === 0 ? (
                             <tr>
-                                <td colSpan={7} className="h-24 text-center text-muted-foreground">
+                                <td colSpan={8} className="h-24 text-center text-muted-foreground">
                                     No entries found.
                                 </td>
                             </tr>
@@ -111,10 +112,17 @@ export function EntriesTable({ entries }: EntriesTableProps) {
                                         onCheckedChange={(c) => handleSelectOne(entry.id, !!c)}
                                     />
                                 </td>
+                                {/* Chest No */}
+                                <td className="p-4 align-middle font-bold text-emerald-600 dark:text-emerald-400">
+                                    {entry.chest_no || '-'}
+                                </td>
                                 {/* @ts-ignore */}
                                 <td className="p-4 align-middle font-medium">
-                                    {entry.students?.name}
-                                    <div className="text-xs text-muted-foreground">{entry.profiles?.full_name} (Coach)</div>
+                                    <div className="flex flex-col">
+                                        <span>{entry.students?.name}</span>
+                                        <span className="text-[10px] font-mono text-muted-foreground">{entry.students?.registration_no}</span>
+                                    </div>
+                                    <div className="text-[10px] text-muted-foreground">{entry.profiles?.full_name} (Coach)</div>
                                 </td>
                                 {/* @ts-ignore */}
                                 <td className="p-4 align-middle">{entry.students?.dojos?.name}</td>

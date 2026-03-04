@@ -55,7 +55,7 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
     const availableStudents = students.filter(s => !existingStudentIds.has(s.id))
 
     const filteredStudents = availableStudents.filter(s => {
-        const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase())
+        const matchesSearch = (s.name || '').toLowerCase().includes(searchQuery.toLowerCase())
         const matchesDojo = filterDojo === 'all' || s.dojos?.name === filterDojo
         const matchesGender = filterGender === 'all' || s.gender === filterGender
         const matchesRank = filterRank === 'all' || s.rank === filterRank
