@@ -100,17 +100,6 @@ export default async function EventEntriesPage({
     const formattedDays = Array.from(daysMap.values())
 
 
-    const exportData = entries?.map(e => ({
-        Student: e.students?.name,
-        Dojo: e.students?.dojos?.name,
-        Category: e.categories?.name,
-        Day: e.event_days?.name,
-        Type: e.participation_type,
-        Status: e.status,
-        Coach: e.profiles?.full_name,
-        Email: e.profiles?.email
-    })) || []
-
     return (
         <div className="space-y-6">
             <Card>
@@ -120,7 +109,7 @@ export default async function EventEntriesPage({
                             <CardTitle>Entries</CardTitle>
                             <p className="text-sm text-muted-foreground">{count ?? 0} records</p>
                         </div>
-                        <ExportEntries data={exportData} />
+                        <ExportEntries eventId={id} searchParams={p} />
                     </div>
                     <EntryFilters coaches={coaches} eventDays={formattedDays} />
                 </CardHeader>
