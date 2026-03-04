@@ -1,6 +1,6 @@
 import { requireRole } from '@/lib/auth/require-role'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, UserCheck, Shield, Swords, Medal, Building2, AlertCircle, XCircle } from "lucide-react"
+import { Users, UserCheck, Shield, Swords, Medal, Building2, AlertCircle, XCircle, Settings } from "lucide-react"
 import Link from 'next/link'
 
 export default async function EventOverviewPage({ params }: { params: { id: string } }) {
@@ -268,6 +268,12 @@ export default async function EventOverviewPage({ params }: { params: { id: stri
                     </CardContent>
                 </Card>
 
+            </div>
+
+            <div className="flex justify-end pt-4">
+                <Link href={`/dashboard/events/${id}/settings`} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
+                    <Settings className="h-3 w-3" /> Event Settings
+                </Link>
             </div>
         </div>
     )

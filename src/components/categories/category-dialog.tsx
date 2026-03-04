@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import {
     Dialog,
@@ -44,6 +44,7 @@ interface CategoryDialogProps {
 export function CategoryDialog({ eventId, category, open, onOpenChange }: CategoryDialogProps) {
     const [internalOpen, setInternalOpen] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const submitLockRef = useRef(false)
 
     const show = open !== undefined ? open : internalOpen
     const setShow = onOpenChange || setInternalOpen
@@ -56,6 +57,8 @@ export function CategoryDialog({ eventId, category, open, onOpenChange }: Catego
     const [maxRank, setMaxRank] = useState(category?.max_rank || '')
 
     const handleSubmit = async (formData: FormData) => {
+        if (submitLockRef.current || isSubmitting) return;
+        submitLockRef.current = true;
         formData.append('gender', gender)
         if (minRank) formData.append('min_rank', minRank)
         if (maxRank) formData.append('max_rank', maxRank)
@@ -76,6 +79,7 @@ export function CategoryDialog({ eventId, category, open, onOpenChange }: Catego
         } catch (error) {
             alert('Failed to save category')
         } finally {
+            submitLockRef.current = false;
             setIsSubmitting(false)
         }
     }

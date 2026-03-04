@@ -103,8 +103,9 @@ export default async function DashboardPage() {
         const [entriesRes, publicEventsRes, applicationsRes, approvedAppsRes, studentsRes] = await Promise.all([
             supabase
                 .from('entries')
-                .select('id', { count: 'exact', head: true })
-                .eq('coach_id', user.id),
+                .select('id, events!inner(end_date)', { count: 'exact', head: true })
+                .eq('coach_id', user.id)
+                .gte('events.end_date', today),
             supabase
                 .from('events')
                 .select('id, title, start_date, end_date, location, event_type, description, is_public')

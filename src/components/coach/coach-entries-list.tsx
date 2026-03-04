@@ -49,12 +49,11 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
 
     useEffect(() => {
         if (!statusPreset) return
-        if (statusPreset === statusFilter) return
 
         setStatusFilter(statusPreset)
         setPage(1)
         setSelectedIds(new Set())
-    }, [statusPreset, statusFilter])
+    }, [statusPreset])
 
     // Derived filter options
     const uniqueRanks = Array.from(
@@ -63,7 +62,7 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
 
     // Filter Logic
     const filteredEntries = entries.filter(e => {
-        const matchesSearch = e.students?.name.toLowerCase().includes(searchQuery.toLowerCase())
+        const matchesSearch = (e.students?.name || '').toLowerCase().includes(searchQuery.toLowerCase())
         const matchesStatus = statusFilter === 'all' || e.status === statusFilter
         const matchesBelt = beltFilter === 'all' || e.students?.rank === beltFilter
         const matchesDay = dayFilter === 'all' || e.event_day_id === dayFilter
@@ -127,6 +126,7 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
     }
 
     const getMissingFields = (student: any) => {
+        if (!student) return []
         const missing = []
         if (!student.weight) missing.push('Weight')
         if (!student.rank) missing.push('Rank')
@@ -236,6 +236,7 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
                                     }}
                                 />
                             </th>
+                            <th className="h-12 px-4 align-middle font-medium text-muted-foreground w-[80px]">Chest</th>
                             <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Student</th>
                             <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Belt</th>
                             <th className="h-12 px-4 align-middle font-medium text-muted-foreground">Day</th>
@@ -246,7 +247,7 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
                     <tbody className="[&_tr:last-child]:border-0">
                         {paginatedEntries.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="h-24 text-center text-muted-foreground">
+                                <td colSpan={7} className="h-24 text-center text-muted-foreground">
                                     {filteredEntries.length === 0
                                         ? "No entries match your filters."
                                         : "No active entries. Go to 'Register' tab to add students."}
@@ -263,6 +264,10 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
                                             onCheckedChange={(c) => handleSelectOne(entry.id, !!c)}
                                             disabled={isReadOnly}
                                         />
+                                    </td>
+                                    {/* Chest No */}
+                                    <td className="p-4 align-middle font-bold text-emerald-600 dark:text-emerald-400">
+                                        {entry.chest_no || '-'}
                                     </td>
                                     {/* Student */}
                                     {/* @ts-ignore */}

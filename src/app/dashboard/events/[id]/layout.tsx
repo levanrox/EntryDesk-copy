@@ -1,6 +1,5 @@
 import { requireRole } from '@/lib/auth/require-role'
 import { notFound } from 'next/navigation'
-import { DeleteEventForm } from '@/components/events/delete-event-form'
 
 export default async function EventLayout({
     children,
@@ -38,7 +37,6 @@ export default async function EventLayout({
                         <span className="capitalize">{event.event_type}</span>
                     </div>
                 </div>
-                {canDelete ? <DeleteEventForm eventId={event.id} eventTitle={event.title} /> : null}
             </div>
 
             {children}

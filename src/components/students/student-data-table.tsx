@@ -46,6 +46,7 @@ interface Student {
     date_of_birth: string | null
     dojo_id: string
     dojos?: { name: string } | null
+    registration_no?: string | null
     // Add other fields as needed
 }
 
@@ -83,6 +84,11 @@ export function StudentDataTable({ data, dojos, initialDojoFilter }: StudentData
 
     // Table Columns definition
     const columns: ColumnDef<Student>[] = [
+        {
+            accessorKey: "registration_no",
+            header: "Reg ID",
+            cell: ({ row }) => <div className="font-mono text-xs">{row.getValue("registration_no") || "-"}</div>,
+        },
         {
             accessorKey: "name",
             header: ({ column }) => {

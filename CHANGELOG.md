@@ -79,6 +79,11 @@ This doc captures the main issues encountered while setting up/running the app l
 - **22nd session:** Tuned dashboard mobile header stacking (z-index/borders) and reduced mobile drawer width for better content context.
 - **22nd session:** Minor copy polish on dashboard Students metric (“Total Athletes”).
 
+- **23rd session:** Implemented organizer-side event Entries management (filtering, pagination, per-entry + bulk approve/reject) backed by `organizer_entries_view`.
+- **23rd session:** Added export-to-Excel for event entries, plus new fields surfaced across UI (student `registration_no`, entry `chest_no`).
+- **23rd session:** Added per-event Settings page (title/location edits, registration open/close toggle, and a “Danger Zone” delete flow).
+- **23rd session:** Added DB support for registration/chest numbers (triggers + view rebuild) and added submit locks to reduce accidental double-submit spam.
+
 ## 1) Supabase migration error: `must be owner of table users`
 
 **Symptom**
@@ -4214,3 +4219,104 @@ This session focused on tightening the coach registration UX on small screens an
 
 **Where**
 - `src/app/dashboard/page.tsx`
+
+---
+
+# Session 23 — Milestone #1: Organizer Entries + Event Settings + Registration/Chest Numbers (v0.4.3, 2026-03-04)
+
+This session captures the milestone1 branch work (released as `v0.4.3`) around organizer-side entry management, event settings, and database support for registration/chest numbers.
+
+## 1) Organizer: event Entries page (filtering + pagination)
+
+**Change**
+- Added a dedicated organizer view at `/dashboard/events/{id}/entries` backed by `organizer_entries_view`.
+- Implemented URL-driven filtering (search `q`, `status`, `coach`, `day`) and pagination.
+- Normalized flat view rows into the nested shape used by the entries table.
+
+**Where**
+- `src/app/dashboard/events/[id]/entries/page.tsx`
+- `src/components/events/entry-filters.tsx`
+
+---
+
+## 2) Organizer: per-entry + bulk approve/reject status updates
+
+**Change**
+- Added server actions to update entry status with organizer ownership checks.
+- Added per-row approve/reject buttons and multi-select bulk actions (“Approve Selected” / “Reject Selected”).
+
+**Where**
+- `src/app/dashboard/events/[id]/entries/actions.ts`
+- `src/components/events/entries-table.tsx`
+- `src/components/events/entry-approval-buttons.tsx`
+
+---
+
+## 3) Organizer: export entries to Excel
+
+**Change**
+- Added a server action to export event entries with the active filters applied.
+- Added a client export control that generates an Excel file and downloads it with exporting/toast feedback.
+
+**Where**
+- `src/app/dashboard/events/[id]/entries/actions.ts`
+- `src/components/events/export-entries.tsx`
+
+---
+
+## 4) Event settings page (registration toggle + danger-zone delete)
+
+**Change**
+- Added a dedicated settings page for organizers/admins.
+- Added settings update action (title/location/registration-open), plus a “Danger Zone” section for deletion.
+- Linked the settings surface from the event page.
+
+**Where**
+- `src/app/dashboard/events/[id]/settings/page.tsx`
+- `src/app/dashboard/events/[id]/actions.ts`
+- `src/components/events/event-settings-form.tsx`
+- `src/app/dashboard/events/[id]/page.tsx`
+- `src/components/ui/accordion.tsx`
+- `src/components/ui/switch.tsx`
+
+---
+
+## 5) DB: student registration numbers + entry chest numbers + registration open/close
+
+**Change**
+- Added `students.registration_no` with automated generation via trigger/sequence.
+- Added `entries.chest_no` and assigned chest numbers when status transitions to `approved`.
+- Rebuilt `organizer_entries_view` to surface `chest_no` and student `registration_no`.
+- Added `events.is_registration_open` boolean (default `true`) to support opening/closing registration.
+
+**Where**
+- `supabase/migrations/20240304_registration_and_chest_no.sql`
+- `supabase/migrations/registration open close toggle.sql`
+
+---
+
+## 6) UI propagation for new fields + spam-submit guards
+
+**Change**
+- Surfaced student `registration_no` in student lists and coach entry views.
+- Surfaced entry `chest_no` in coach and organizer entry tables.
+- Added submit locks to reduce accidental double-submit spam in common dialogs.
+
+**Where**
+- `src/components/students/student-data-table.tsx`
+- `src/app/dashboard/entries/[eventId]/page.tsx`
+- `src/components/coach/coach-entries-list.tsx`
+- `src/components/students/student-dialog.tsx`
+- `src/components/dojos/dojo-dialog.tsx`
+- `src/components/categories/category-dialog.tsx`
+
+---
+
+## 7) Docs refresh
+
+**Change**
+- Added contribution guidelines and refreshed README feature/setup notes.
+
+**Where**
+- `CONTRIBUTING.md`
+- `README.md`

@@ -68,3 +68,49 @@ export async function bulkUpdateEntryStatus(entryIds: string[], status: 'approve
 
     return { success: true }
 }
+
+export async function exportEventEntries(eventId: string, searchParams: { q?: string, status?: string, coach?: string, day?: string }) {
+    const { supabase } = await requireRole(['organizer', 'admin'])
+
+    let query = supabase
+        .from('organizer_entries_view')
+        .select('*')
+        .eq('event_id', eventId)
+        .neq('status', 'draft')
+
+    if (searchParams.q) {
+        query = query.ilike('student_name', `%${searchParams.q}%`)
+    }
+    if (searchParams.status && searchParams.status !== 'all') {
+        query = query.eq('status', searchParams.status)
+    }
+    if (searchParams.coach && searchParams.coach !== 'all') {
+        query = query.eq('coach_id', searchParams.coach)
+    }
+    if (searchParams.day && searchParams.day !== 'all') {
+        query = query.eq('event_day_id', searchParams.day)
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false })
+
+    if (error) {
+        console.error("Export query error:", error)
+        throw new Error('Failed to fetch entries for export')
+    }
+
+    if (!data) return []
+
+    return data.map((e: any) => ({
+        'Student Name': e.student_name,
+        'Rank/Belt': e.student_rank || '-',
+        'Weight': e.student_weight ? `${e.student_weight} kg` : '-',
+        'Dojo': e.dojo_name || '-',
+        'Category': e.category_name || '-',
+        'Event Day': e.event_day_name || '-',
+        'Participation Type': e.participation_type,
+        'Status': e.status,
+        'Coach Name': e.coach_name || '-',
+        'Coach Email': e.coach_email || '-',
+        'Date Applied': new Date(e.created_at).toLocaleDateString()
+    }))
+}
