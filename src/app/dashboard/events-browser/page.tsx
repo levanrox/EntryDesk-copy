@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Calendar, MapPin, ArrowRight, FolderOpen, CheckCircle2, Clock, XCircle } from 'lucide-react'
 import { PaginationControls } from '@/components/ui/pagination-controls'
 import { RegistrationDeadline } from '@/components/events/registration-deadline'
+import { isRegistrationClosed } from '@/lib/events/registration'
 
 export default async function EventBrowserPage({
     searchParams,
@@ -146,6 +147,7 @@ export default async function EventBrowserPage({
                         <div className="dashboard-list">
                             {activeUpcomingEvents.map((event) => {
                                 const status = appMap.get(event.id)
+                                const registrationClosed = isRegistrationClosed(event, today)
                                 return (
                                     <div
                                         key={event.id}
@@ -200,7 +202,7 @@ export default async function EventBrowserPage({
                                                     </Link>
                                                 </Button>
                                             ) : (
-                                                <ApplyButton eventId={event.id} status={status} />
+                                                <ApplyButton eventId={event.id} status={status} registrationClosed={registrationClosed} />
                                             )}
                                         </div>
                                     </div>

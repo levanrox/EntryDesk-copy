@@ -91,6 +91,9 @@ This doc captures the main issues encountered while setting up/running the app l
 - **24th session:** Restored public past-event card behavior to keep `View event` dialog accessible after user-requested revert.
 - **24th session:** Adjusted coach-facing queries so `is_public` no longer hides private events in dashboard/browser views (hero/public API remains `is_public`-filtered).
 
+- **25th session:** Enforced registration-closed behavior for coaches end-to-end: active events remain visible, but all entry mutations/actions are locked when registration is closed (manual toggle, close-date elapsed, or past event).
+- **25th session:** Added a shared registration-lock helper and aligned coach UI state/messages (`Registration Closed`) with backend guardrails.
+
 ## 1) Supabase migration error: `must be owner of table users`
 
 **Symptom**
@@ -384,6 +387,64 @@ This session focused on event reliability (create flow + build stability), consi
 
 **Why**
 - Aligns product behavior: public toggle controls hero/public exposure, not coach operational visibility.
+
+---
+
+# Session 25 — Registration Closed Lockdown for Coach Entry Flow
+
+This session enforced product behavior where registration closure should behave like a past event for coach actions, even when the event still appears under Active Events.
+
+## 1) Coaches could still create/submit entries after organizer closed registration
+
+**Symptom**
+- After organizer toggled registration off (or close date passed), coaches could still add/edit/submit/delete entries.
+- This conflicted with expected behavior: event can stay visible, but coach entry operations must be inaccessible.
+
+**Root cause**
+- Coach mutation actions were checking role/auth only, not event registration state.
+- Read-only UI mode on coach event page was tied primarily to past-event date checks.
+
+**Fix**
+- Added a shared registration lock helper that treats an event as closed when any of these are true:
+  - event is past (`end_date < today`)
+  - organizer toggled `is_registration_open = false`
+  - `registration_close_date` is before today
+- Applied backend guardrails to all coach entry mutation actions.
+- Switched coach event page read-only mode to use the shared registration lock state.
+
+**Where**
+- `src/lib/events/registration.ts`
+- `src/app/dashboard/entries/actions/index.ts`
+- `src/app/dashboard/entries/[eventId]/page.tsx`
+
+**Why**
+- Ensures business rules are enforced server-side (cannot be bypassed via UI/devtools) and keeps behavior consistent with organizer registration controls.
+
+---
+
+## 2) Event application and coach CTA states did not reflect closed registration clearly
+
+**Symptom**
+- Coaches could still attempt `Request to Participate` in some flows.
+- UI feedback for blocked actions was too generic.
+
+**Fix**
+- Blocked `applyToEvent` server action when registration is closed.
+- Added `registrationClosed` UI path in apply button to render disabled `Registration Closed` state.
+- Passed registration-closed state from active coach event surfaces.
+- Improved coach bulk/register error surfaces to show specific server messages (e.g. `Registration is closed for this event`).
+
+**Where**
+- `src/app/dashboard/events-browser/actions/index.ts`
+- `src/components/events/apply-button.tsx`
+- `src/app/dashboard/events-browser/page.tsx`
+- `src/components/dashboard/coach-active-events-cards.tsx`
+- `src/components/coach/coach-entries-list.tsx`
+- `src/components/coach/coach-student-register.tsx`
+
+**Why**
+- Keeps coach UX explicit and predictable while matching backend enforcement.
+
 
 
 Below is a detailed, chronological and technical log of what changed, why it was needed, and how it was implemented.

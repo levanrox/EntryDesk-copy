@@ -9,9 +9,10 @@ import { useRouter } from "next/navigation"
 interface ApplyButtonProps {
     eventId: string
     status?: string // 'pending', 'approved', 'rejected' or undefined
+    registrationClosed?: boolean
 }
 
-export function ApplyButton({ eventId, status }: ApplyButtonProps) {
+export function ApplyButton({ eventId, status, registrationClosed = false }: ApplyButtonProps) {
     const [isLoading, setIsLoading] = useState(false)
     const router = useRouter()
 
@@ -44,6 +45,10 @@ export function ApplyButton({ eventId, status }: ApplyButtonProps) {
 
     if (status === 'rejected') {
         return <Button variant="destructive" disabled>Rejected</Button>
+    }
+
+    if (registrationClosed) {
+        return <Button variant="outline" disabled>Registration Closed</Button>
     }
 
     return (

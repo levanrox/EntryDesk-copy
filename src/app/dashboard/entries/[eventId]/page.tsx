@@ -1,6 +1,7 @@
 import { requireRole } from '@/lib/auth/require-role'
 import { CoachDashboard } from '@/components/coach/coach-dashboard'
 import { notFound } from 'next/navigation'
+import { isRegistrationClosed } from '@/lib/events/registration'
 
 export default async function EventEntriesPage({ params }: { params: { eventId: string } }) {
   const { eventId } = await params
@@ -58,8 +59,7 @@ export default async function EventEntriesPage({ params }: { params: { eventId: 
 
   // Compute Stats
   const validEntries = entries || []
-  const todayIso = new Date().toISOString().slice(0, 10)
-  const isPastEvent = event.end_date < todayIso
+  const isEntryLocked = isRegistrationClosed(event)
   const stats = {
     total: validEntries.length,
     draft: validEntries.filter(e => e.status === 'draft').length,
@@ -75,7 +75,7 @@ export default async function EventEntriesPage({ params }: { params: { eventId: 
       students={students || []}
       eventDays={eventDays || []}
       dojos={dojos || []}
-      isPastEvent={isPastEvent}
+      isPastEvent={isEntryLocked}
     />
   )
 }
