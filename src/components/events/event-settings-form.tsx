@@ -18,6 +18,7 @@ interface EventSettingsFormProps {
         title: string
         location: string | null
         is_registration_open: boolean
+        is_public: boolean
     }
 }
 
@@ -25,8 +26,10 @@ export function EventSettingsForm({ event }: EventSettingsFormProps) {
     const [title, setTitle] = useState(event.title)
     const [location, setLocation] = useState(event.location || '')
     const [isRegistrationOpen, setIsRegistrationOpen] = useState(event.is_registration_open)
+    const [isPublic, setIsPublic] = useState(event.is_public)
     const [isSaving, setIsSaving] = useState(false)
     const [isTogglingRegistration, setIsTogglingRegistration] = useState(false)
+    const [isTogglingVisibility, setIsTogglingVisibility] = useState(false)
 
     const handleSaveGeneral = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -64,6 +67,29 @@ export function EventSettingsForm({ event }: EventSettingsFormProps) {
         }
     }
 
+    const handleVisibilityToggle = async (checked: boolean) => {
+        if (isTogglingVisibility || checked === isPublic) return
+
+        const message = checked
+            ? 'Make this event public? It will be visible on the home page and public listings.'
+            : 'Make this event private? It will be hidden from the home page and public listings.'
+
+        const confirmed = window.confirm(message)
+        if (!confirmed) return
+
+        setIsTogglingVisibility(true)
+        setIsPublic(checked)
+        try {
+            await updateEventSettings(event.id, { is_public: checked })
+            toast.success(`Event is now ${checked ? 'public' : 'private'}`)
+        } catch (error: any) {
+            setIsPublic(!checked)
+            toast.error(error.message || 'Failed to update event visibility')
+        } finally {
+            setIsTogglingVisibility(false)
+        }
+    }
+
     return (
         <div className="space-y-6 max-w-4xl">
             <Card>
@@ -83,6 +109,28 @@ export function EventSettingsForm({ event }: EventSettingsFormProps) {
                             checked={isRegistrationOpen}
                             onCheckedChange={handleRegistrationToggle}
                             disabled={isTogglingRegistration}
+                        />
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Visibility</CardTitle>
+                    <CardDescription>Control whether this event appears in public listings.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-0.5">
+                            <Label className="text-base">Public event</Label>
+                            <p className="text-sm text-muted-foreground">
+                                Public events appear on the home page and events browser.
+                            </p>
+                        </div>
+                        <Switch
+                            checked={isPublic}
+                            onCheckedChange={handleVisibilityToggle}
+                            disabled={isTogglingVisibility}
                         />
                     </div>
                 </CardContent>
