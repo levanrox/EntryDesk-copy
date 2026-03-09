@@ -14,6 +14,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog'
 import { formatDateRangeStable } from '@/lib/date'
+import { RegistrationDeadline } from '@/components/events/registration-deadline'
 
 type CoachActiveEvent = {
     id: string
@@ -23,6 +24,8 @@ type CoachActiveEvent = {
     location: string | null
     event_type: string | null
     description?: string | null
+    registration_close_date?: string | null
+    is_registration_open?: boolean | null
 }
 
 export function CoachActiveEventsCards({
@@ -68,6 +71,10 @@ export function CoachActiveEventsCards({
                                         <span className="truncate max-w-[200px]">{event.location}</span>
                                     </div>
                                 )}
+                                <RegistrationDeadline
+                                    registrationCloseDate={event.registration_close_date}
+                                    isRegistrationOpen={event.is_registration_open}
+                                />
                             </div>
 
                             <div className="mt-auto pt-4 flex gap-3">
@@ -125,6 +132,10 @@ export function CoachActiveEventsCards({
                                     <Users className="h-4 w-4" />
                                     <span>Open registration</span>
                                 </div>
+                                <RegistrationDeadline
+                                    registrationCloseDate={selectedEvent.registration_close_date}
+                                    isRegistrationOpen={selectedEvent.is_registration_open}
+                                />
                             </div>
 
                             <div className="space-y-2 rounded-lg border border-border/50 p-4">

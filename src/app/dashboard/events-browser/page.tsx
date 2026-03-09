@@ -6,6 +6,7 @@ import { DashboardPageHeader } from '@/components/dashboard/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, MapPin, ArrowRight, FolderOpen, CheckCircle2, Clock, XCircle } from 'lucide-react'
 import { PaginationControls } from '@/components/ui/pagination-controls'
+import { RegistrationDeadline } from '@/components/events/registration-deadline'
 
 export default async function EventBrowserPage({
     searchParams,
@@ -21,7 +22,6 @@ export default async function EventBrowserPage({
     const { data: events, count } = await supabase
         .from('events')
         .select('*', { count: 'exact' })
-        .eq('is_public', true)
         .order('start_date', { ascending: true })
         .range(offset, offset + limit - 1)
 
@@ -108,6 +108,11 @@ export default async function EventBrowserPage({
                                                         </>
                                                     )}
                                                 </div>
+                                                <RegistrationDeadline
+                                                    className="mt-1"
+                                                    registrationCloseDate={event.registration_close_date}
+                                                    isRegistrationOpen={event.is_registration_open}
+                                                />
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2 shrink-0">
@@ -179,6 +184,11 @@ export default async function EventBrowserPage({
                                                         </>
                                                     )}
                                                 </div>
+                                                <RegistrationDeadline
+                                                    className="mt-1"
+                                                    registrationCloseDate={event.registration_close_date}
+                                                    isRegistrationOpen={event.is_registration_open}
+                                                />
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2 shrink-0">

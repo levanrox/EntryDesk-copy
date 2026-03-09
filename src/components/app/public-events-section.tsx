@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { Calendar, MapPin, Users } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { RegistrationDeadline } from '@/components/events/registration-deadline'
 import {
     Dialog,
     DialogContent,
@@ -21,6 +22,8 @@ type PublicEvent = {
     location: string | null
     max_participants: number | null
     description: string | null
+    registration_close_date?: string | null
+    is_registration_open?: boolean | null
 }
 
 const PREVIEW_COUNT = 3
@@ -76,6 +79,7 @@ export function PublicEventsSection({
 
     const visibleUpcomingEvents = showAllUpcoming ? upcomingEvents : upcomingEvents.slice(0, PREVIEW_COUNT)
     const visiblePastEvents = showAllPast ? pastEvents : pastEvents.slice(0, PREVIEW_COUNT)
+    const selectedEventIsPast = !!selectedEvent && (selectedEvent.end_date || selectedEvent.start_date).slice(0, 10) < todayIso
 
     return (
         <>
@@ -91,6 +95,7 @@ export function PublicEventsSection({
                     onToggleViewAll={() => setShowAllUpcoming((previous) => !previous)}
                     onViewEvent={setSelectedEvent}
                     emptyMessage="No upcoming public events currently scheduled. Check back later."
+                    isPastSection={false}
                 />
 
                 <EventSection
@@ -103,6 +108,7 @@ export function PublicEventsSection({
                     onToggleViewAll={() => setShowAllPast((previous) => !previous)}
                     onViewEvent={setSelectedEvent}
                     emptyMessage="No past public events available yet."
+                    isPastSection={true}
                 />
             </div>
 
@@ -133,6 +139,12 @@ export function PublicEventsSection({
                                     <Users className="h-4 w-4" />
                                     <span>{selectedEvent.max_participants ? `${selectedEvent.max_participants} max participants` : 'Open registration'}</span>
                                 </div>
+                                <RegistrationDeadline
+                                    registrationCloseDate={selectedEvent.registration_close_date}
+                                    isRegistrationOpen={selectedEvent.is_registration_open}
+                                    todayIso={todayIso}
+                                    isPastEvent={selectedEventIsPast}
+                                />
                             </div>
 
                             <div className="space-y-2 rounded-lg border border-border/50 p-4">
@@ -160,6 +172,7 @@ function EventSection({
     onToggleViewAll,
     onViewEvent,
     emptyMessage,
+    isPastSection,
 }: {
     sectionId?: string
     title: string
@@ -171,6 +184,7 @@ function EventSection({
     onToggleViewAll: () => void
     onViewEvent: (event: PublicEvent) => void
     emptyMessage: string
+    isPastSection: boolean
 }) {
     return (
         <section id={sectionId} className={sectionId ? 'scroll-mt-24' : undefined}>
@@ -186,28 +200,34 @@ function EventSection({
                             return (
                                 <article
                                     key={event.id}
-                                    className="rounded-xl border border-border/50 p-6 transition-colors hover:border-border/70 dark:border-white/[0.10] dark:hover:border-white/[0.16]"
+                                    className="flex h-full flex-col rounded-xl border border-border/50 p-6 transition-colors hover:border-border/70 dark:border-white/[0.10] dark:hover:border-white/[0.16]"
                                 >
                                     <div className="mb-4 flex items-center justify-between gap-2">
-                                        <h3 className="text-xl font-semibold leading-tight">{event.title}</h3>
-                                        <Badge className="border-0 bg-muted/30 text-foreground dark:bg-white/[0.08]">
+                                        <h3 className="min-w-0 truncate text-xl font-semibold leading-tight">{event.title}</h3>
+                                        <Badge className="shrink-0 border-0 bg-muted/30 text-foreground dark:bg-white/[0.08]">
                                             {formatEventTypeLabel(event.event_type)}
                                         </Badge>
                                     </div>
 
                                     <div className="space-y-2 text-sm">
-                                        <div className="flex items-center gap-2 text-muted-foreground">
-                                            <Calendar className="h-4 w-4" />
-                                            <span>{formatDisplayDateRange(event.start_date, event.end_date)}</span>
+                                        <div className="flex min-w-0 items-center gap-2 text-muted-foreground">
+                                            <Calendar className="h-4 w-4 shrink-0" />
+                                            <span className="truncate">{formatDisplayDateRange(event.start_date, event.end_date)}</span>
                                         </div>
-                                        <div className="flex items-center gap-2 text-muted-foreground">
-                                            <MapPin className="h-4 w-4" />
-                                            <span>{event.location || 'Location to be announced'}</span>
+                                        <div className="flex min-w-0 items-center gap-2 text-muted-foreground">
+                                            <MapPin className="h-4 w-4 shrink-0" />
+                                            <span className="truncate">{event.location || 'Location to be announced'}</span>
                                         </div>
-                                        <div className="flex items-center gap-2 text-muted-foreground">
-                                            <Users className="h-4 w-4" />
-                                            <span>{event.max_participants ? `${event.max_participants} max participants` : 'Open registration'}</span>
+                                        <div className="flex min-w-0 items-center gap-2 text-muted-foreground">
+                                            <Users className="h-4 w-4 shrink-0" />
+                                            <span className="truncate">{event.max_participants ? `${event.max_participants} max participants` : 'Open registration'}</span>
                                         </div>
+                                        <RegistrationDeadline
+                                            className="min-w-0"
+                                            registrationCloseDate={event.registration_close_date}
+                                            isRegistrationOpen={event.is_registration_open}
+                                            isPastEvent={isPastSection}
+                                        />
                                     </div>
 
                                     <Button

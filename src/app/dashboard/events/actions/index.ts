@@ -4,6 +4,22 @@ import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/require-role'
 import { addDays, format, subMinutes } from 'date-fns'
 
+type SupabaseActionError = {
+  code?: string
+  message?: string
+  details?: string
+}
+
+function isMissingRegistrationCloseDateColumnError(error: SupabaseActionError | null | undefined) {
+  if (!error) return false
+
+  const combined = `${error.code || ''} ${error.message || ''} ${error.details || ''}`.toLowerCase()
+  return (
+    combined.includes('registration_close_date') &&
+    (combined.includes('column') || combined.includes('schema cache') || combined.includes('pgrst204'))
+  )
+}
+
 export async function createEvent(formData: FormData) {
   const { supabase, user } = await requireRole(['organizer', 'admin'])
 
@@ -17,8 +33,16 @@ export async function createEvent(formData: FormData) {
   const registration_close_date = registration_close_date_raw || null
   const is_public = formData.get('is_public') === 'on'
 
-  if (registration_close_date && (registration_close_date < start_date || registration_close_date > end_date)) {
-    throw new Error('Registration close date must be between event start and end date')
+  if (!title || !event_type || !start_date || !end_date) {
+    return { success: false, error: 'Please fill in all required fields.' }
+  }
+
+  if (start_date > end_date) {
+    return { success: false, error: 'Event start date must be on or before end date.' }
+  }
+
+  if (registration_close_date && registration_close_date > start_date) {
+    return { success: false, error: 'Registration close date must be on or before event start date.' }
   }
 
   const dedupeWindowStart = subMinutes(new Date(), 2).toISOString()
@@ -42,7 +66,7 @@ export async function createEvent(formData: FormData) {
 
   if (duplicateError) {
     console.error(duplicateError)
-    throw new Error('Failed to create event')
+    return { success: false, error: 'Failed to create event. Please try again.' }
   }
 
   if (duplicateEvent) {
@@ -51,21 +75,37 @@ export async function createEvent(formData: FormData) {
   }
 
   // Insert Event
-  const { data: event, error } = await supabase
+  const baseInsertPayload = {
+    title,
+    description,
+    event_type,
+    location,
+    start_date,
+    end_date,
+    is_public,
+    organizer_id: user.id
+  }
+
+  let { data: event, error } = await supabase
     .from('events')
     .insert({
-      title,
-      description,
-      event_type,
-      location,
-      start_date,
-      end_date,
+      ...baseInsertPayload,
       registration_close_date,
-      is_public,
-      organizer_id: user.id
     })
     .select()
     .single()
+
+  // Backward compatibility: production might still be on an older schema without this column.
+  if (error && isMissingRegistrationCloseDateColumnError(error as SupabaseActionError)) {
+    const fallbackInsert = await supabase
+      .from('events')
+      .insert(baseInsertPayload)
+      .select()
+      .single()
+
+    event = fallbackInsert.data
+    error = fallbackInsert.error
+  }
 
   if (error) {
     // Unique constraint can still race under concurrent requests; treat as duplicate.
@@ -90,7 +130,7 @@ export async function createEvent(formData: FormData) {
       const { data: existingEvent, error: existingEventError } = await existingEventQuery.maybeSingle()
       if (existingEventError) {
         console.error(existingEventError)
-        throw new Error('Failed to create event')
+        return { success: false, error: 'Failed to create event. Please try again.' }
       }
 
       if (existingEvent) {
@@ -100,7 +140,7 @@ export async function createEvent(formData: FormData) {
     }
 
     console.error(error)
-    throw new Error('Failed to create event')
+    return { success: false, error: 'Failed to create event. Please try again.' }
   }
 
   // Auto-generate Event Days if multi-day or single day
