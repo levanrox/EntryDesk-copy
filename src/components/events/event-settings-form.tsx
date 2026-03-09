@@ -26,6 +26,7 @@ export function EventSettingsForm({ event }: EventSettingsFormProps) {
     const [location, setLocation] = useState(event.location || '')
     const [isRegistrationOpen, setIsRegistrationOpen] = useState(event.is_registration_open)
     const [isSaving, setIsSaving] = useState(false)
+    const [isTogglingRegistration, setIsTogglingRegistration] = useState(false)
 
     const handleSaveGeneral = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -41,6 +42,16 @@ export function EventSettingsForm({ event }: EventSettingsFormProps) {
     }
 
     const handleRegistrationToggle = async (checked: boolean) => {
+        if (isTogglingRegistration || checked === isRegistrationOpen) return
+
+        const message = checked
+            ? 'Open registrations for this event? Coaches will be able to add new entries.'
+            : 'Close registrations for this event? Coaches will no longer be able to add new entries.'
+
+        const confirmed = window.confirm(message)
+        if (!confirmed) return
+
+        setIsTogglingRegistration(true)
         setIsRegistrationOpen(checked)
         try {
             await updateEventSettings(event.id, { is_registration_open: checked })
@@ -48,6 +59,8 @@ export function EventSettingsForm({ event }: EventSettingsFormProps) {
         } catch (error: any) {
             setIsRegistrationOpen(!checked) // Revert on failure
             toast.error(error.message || "Failed to update registration status")
+        } finally {
+            setIsTogglingRegistration(false)
         }
     }
 
@@ -69,6 +82,7 @@ export function EventSettingsForm({ event }: EventSettingsFormProps) {
                         <Switch
                             checked={isRegistrationOpen}
                             onCheckedChange={handleRegistrationToggle}
+                            disabled={isTogglingRegistration}
                         />
                     </div>
                 </CardContent>

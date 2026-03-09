@@ -167,14 +167,22 @@ export function LandingUiPreview() {
                         type="button"
                         aria-label="Show coach preview"
                         onClick={() => scrollToView('coach')}
-                        className={`h-1.5 rounded-full transition-all ${activeView === 'coach' ? 'w-6 bg-primary' : 'w-2.5 bg-muted-foreground/40 hover:bg-muted-foreground/60'}`}
-                    />
+                        className="group flex h-6 w-6 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    >
+                        <span
+                            className={`h-1.5 rounded-full transition-all ${activeView === 'coach' ? 'w-6 bg-primary' : 'w-2.5 bg-muted-foreground/40 group-hover:bg-muted-foreground/60'}`}
+                        />
+                    </button>
                     <button
                         type="button"
                         aria-label="Show organizer preview"
                         onClick={() => scrollToView('organizer')}
-                        className={`h-1.5 rounded-full transition-all ${activeView === 'organizer' ? 'w-6 bg-primary' : 'w-2.5 bg-muted-foreground/40 hover:bg-muted-foreground/60'}`}
-                    />
+                        className="group flex h-6 w-6 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    >
+                        <span
+                            className={`h-1.5 rounded-full transition-all ${activeView === 'organizer' ? 'w-6 bg-primary' : 'w-2.5 bg-muted-foreground/40 group-hover:bg-muted-foreground/60'}`}
+                        />
+                    </button>
                 </div>
             </div>
         </section>
