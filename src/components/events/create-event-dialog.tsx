@@ -104,6 +104,11 @@ export function CreateEventDialog() {
                         </div>
 
                         <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="registration_close_date" className="text-right">Registration Closes</Label>
+                            <Input type="date" name="registration_close_date" className="col-span-3" required />
+                        </div>
+
+                        <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="is_public" className="text-right">Public?</Label>
                             <div className="col-span-3 flex items-center space-x-2">
                                 <Checkbox id="is_public" name="is_public" />

@@ -13,7 +13,13 @@ export async function createEvent(formData: FormData) {
   const location = (formData.get('location') as string)?.trim()
   const start_date = formData.get('start_date') as string // YYYY-MM-DD
   const end_date = formData.get('end_date') as string // YYYY-MM-DD
+  const registration_close_date_raw = (formData.get('registration_close_date') as string | null)?.trim() || ''
+  const registration_close_date = registration_close_date_raw || null
   const is_public = formData.get('is_public') === 'on'
+
+  if (registration_close_date && (registration_close_date < start_date || registration_close_date > end_date)) {
+    throw new Error('Registration close date must be between event start and end date')
+  }
 
   const dedupeWindowStart = subMinutes(new Date(), 2).toISOString()
   let duplicateQuery = supabase
@@ -54,6 +60,7 @@ export async function createEvent(formData: FormData) {
       location,
       start_date,
       end_date,
+      registration_close_date,
       is_public,
       organizer_id: user.id
     })
