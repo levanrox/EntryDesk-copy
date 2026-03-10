@@ -15,6 +15,7 @@ type ApprovedEvent = {
     description?: string | null
     registration_close_date?: string | null
     is_registration_open?: boolean | null
+    temporary_registration_closes_at?: string | null
 }
 
 function isApprovedEvent(value: unknown): value is ApprovedEvent {
@@ -52,7 +53,8 @@ export default async function EntriesPage({
             location, 
             description,
             registration_close_date,
-            is_registration_open
+            is_registration_open,
+            temporary_registration_closes_at
         )
     `, { count: 'exact' })
         .eq('coach_id', user.id)
@@ -117,8 +119,7 @@ export default async function EntriesPage({
                                                 </div>
                                                 <RegistrationDeadline
                                                     className="mt-1"
-                                                    registrationCloseDate={event.registration_close_date}
-                                                    isRegistrationOpen={event.is_registration_open}
+                                                    event={event}
                                                 />
                                             </div>
                                         </div>

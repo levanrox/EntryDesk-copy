@@ -27,6 +27,7 @@ type CoachActiveEvent = {
     description?: string | null
     registration_close_date?: string | null
     is_registration_open?: boolean | null
+    temporary_registration_closes_at?: string | null
 }
 
 export function CoachActiveEventsCards({
@@ -74,8 +75,7 @@ export function CoachActiveEventsCards({
                                     </div>
                                 )}
                                 <RegistrationDeadline
-                                    registrationCloseDate={event.registration_close_date}
-                                    isRegistrationOpen={event.is_registration_open}
+                                    event={event}
                                 />
                             </div>
 
@@ -135,8 +135,7 @@ export function CoachActiveEventsCards({
                                     <span>Open registration</span>
                                 </div>
                                 <RegistrationDeadline
-                                    registrationCloseDate={selectedEvent.registration_close_date}
-                                    isRegistrationOpen={selectedEvent.is_registration_open}
+                                    event={selectedEvent}
                                 />
                             </div>
 

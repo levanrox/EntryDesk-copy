@@ -24,6 +24,7 @@ type PublicEvent = {
     description: string | null
     registration_close_date?: string | null
     is_registration_open?: boolean | null
+    temporary_registration_closes_at?: string | null
 }
 
 const PREVIEW_COUNT = 3
@@ -140,8 +141,7 @@ export function PublicEventsSection({
                                     <span>{selectedEvent.max_participants ? `${selectedEvent.max_participants} max participants` : 'Open registration'}</span>
                                 </div>
                                 <RegistrationDeadline
-                                    registrationCloseDate={selectedEvent.registration_close_date}
-                                    isRegistrationOpen={selectedEvent.is_registration_open}
+                                    event={selectedEvent}
                                     todayIso={todayIso}
                                     isPastEvent={selectedEventIsPast}
                                 />
@@ -224,8 +224,7 @@ function EventSection({
                                         </div>
                                         <RegistrationDeadline
                                             className="min-w-0"
-                                            registrationCloseDate={event.registration_close_date}
-                                            isRegistrationOpen={event.is_registration_open}
+                                            event={event}
                                             isPastEvent={isPastSection}
                                         />
                                     </div>

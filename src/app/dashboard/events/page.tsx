@@ -135,8 +135,7 @@ export default async function EventsPage({
                       </div>
                       <RegistrationDeadline
                         className="mt-1"
-                        registrationCloseDate={event.registration_close_date}
-                        isRegistrationOpen={event.is_registration_open}
+                        event={event}
                       />
                     </div>
                   </div>

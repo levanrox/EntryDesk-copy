@@ -111,8 +111,7 @@ export default async function EventBrowserPage({
                                                 </div>
                                                 <RegistrationDeadline
                                                     className="mt-1"
-                                                    registrationCloseDate={event.registration_close_date}
-                                                    isRegistrationOpen={event.is_registration_open}
+                                                    event={event}
                                                 />
                                             </div>
                                         </div>
@@ -188,8 +187,7 @@ export default async function EventBrowserPage({
                                                 </div>
                                                 <RegistrationDeadline
                                                     className="mt-1"
-                                                    registrationCloseDate={event.registration_close_date}
-                                                    isRegistrationOpen={event.is_registration_open}
+                                                    event={event}
                                                 />
                                             </div>
                                         </div>

@@ -67,6 +67,9 @@ export default async function EventEntriesPage({ params }: { params: { eventId: 
     approved: validEntries.filter(e => e.status === 'approved').length
   }
 
+  const todayIso = new Date().toISOString().slice(0, 10)
+  const isPast = event.end_date ? event.end_date < todayIso : false
+
   return (
     <CoachDashboard
       event={event}
@@ -75,7 +78,8 @@ export default async function EventEntriesPage({ params }: { params: { eventId: 
       students={students || []}
       eventDays={eventDays || []}
       dojos={dojos || []}
-      isPastEvent={isEntryLocked}
+      isPastEvent={isPast}
+      isRegistrationClosed={isEntryLocked}
     />
   )
 }

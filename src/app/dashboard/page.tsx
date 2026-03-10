@@ -16,9 +16,9 @@ type PublicEvent = {
     location: string | null
     event_type: string | null
     description?: string | null
-    is_public: boolean
     registration_close_date?: string | null
     is_registration_open?: boolean | null
+    temporary_registration_closes_at?: string | null
 }
 
 type ApprovedEvent = {
@@ -30,6 +30,7 @@ type ApprovedEvent = {
     event_type: string | null
     registration_close_date?: string | null
     is_registration_open?: boolean | null
+    temporary_registration_closes_at?: string | null
 }
 
 type ApprovedApplication = {
@@ -47,6 +48,7 @@ type OrganizerEvent = {
     event_type: string | null
     registration_close_date?: string | null
     is_registration_open?: boolean | null
+    temporary_registration_closes_at?: string | null
 }
 
 export default async function DashboardPage() {
@@ -78,7 +80,7 @@ export default async function DashboardPage() {
 
         const { data: activeOrganizerEvents } = await supabase
             .from('events')
-            .select('id, title, start_date, end_date, location, event_type, registration_close_date, is_registration_open')
+            .select('id, title, start_date, end_date, location, event_type, registration_close_date, is_registration_open, temporary_registration_closes_at')
             .eq('organizer_id', user.id)
             .gte('end_date', today)
             .order('start_date', { ascending: true })
@@ -115,7 +117,7 @@ export default async function DashboardPage() {
                 .gte('events.end_date', today),
             supabase
                 .from('events')
-                .select('id, title, start_date, end_date, location, event_type, description, is_public, registration_close_date, is_registration_open')
+                .select('id, title, start_date, end_date, location, event_type, description, is_public, registration_close_date, is_registration_open, temporary_registration_closes_at')
                 .order('start_date', { ascending: true }),
             supabase
                 .from('event_applications')
@@ -134,7 +136,8 @@ export default async function DashboardPage() {
                         location,
                         event_type,
                         registration_close_date,
-                        is_registration_open
+                        is_registration_open,
+                        temporary_registration_closes_at
                     )
                 `)
                 .eq('coach_id', user.id)
@@ -399,8 +402,7 @@ export default async function DashboardPage() {
                                                 </div>
                                                 <RegistrationDeadline
                                                     className="mt-1"
-                                                    registrationCloseDate={event.registration_close_date}
-                                                    isRegistrationOpen={event.is_registration_open}
+                                                    event={event}
                                                 />
                                             </div>
                                             <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -473,8 +475,7 @@ export default async function DashboardPage() {
                                                     </div>
                                                     <RegistrationDeadline
                                                         className="mt-1"
-                                                        registrationCloseDate={event.registration_close_date}
-                                                        isRegistrationOpen={event.is_registration_open}
+                                                        event={event}
                                                     />
                                                 </div>
                                             </div>

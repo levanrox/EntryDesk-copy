@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
-import { Loader2, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
+import { Loader2, AlertTriangle, ChevronDown, ChevronUp, Clock } from 'lucide-react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
 interface EventSettingsFormProps {
@@ -19,17 +19,34 @@ interface EventSettingsFormProps {
         location: string | null
         is_registration_open: boolean
         is_public: boolean
+        temporary_registration_closes_at?: string | null
     }
 }
 
 export function EventSettingsForm({ event }: EventSettingsFormProps) {
     const [title, setTitle] = useState(event.title)
     const [location, setLocation] = useState(event.location || '')
-    const [isRegistrationOpen, setIsRegistrationOpen] = useState(event.is_registration_open)
     const [isPublic, setIsPublic] = useState(event.is_public)
     const [isSaving, setIsSaving] = useState(false)
-    const [isTogglingRegistration, setIsTogglingRegistration] = useState(false)
     const [isTogglingVisibility, setIsTogglingVisibility] = useState(false)
+    const [tempClosesAt, setTempClosesAt] = useState<string | null>(event.temporary_registration_closes_at || null)
+
+    const handleTemporaryOpen = async (minutes: number) => {
+        setIsSaving(true)
+        try {
+            const newTime = minutes > 0 
+                ? new Date(Date.now() + minutes * 60000).toISOString()
+                : null
+            
+            await updateEventSettings(event.id, { temporary_registration_closes_at: newTime })
+            setTempClosesAt(newTime)
+            toast.success(minutes > 0 ? `Registration opened for ${minutes} minutes` : 'Temporary open closed')
+        } catch (error: any) {
+            toast.error(error.message || 'Failed to update temporary open status')
+        } finally {
+            setIsSaving(false)
+        }
+    }
 
     const handleSaveGeneral = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -41,29 +58,6 @@ export function EventSettingsForm({ event }: EventSettingsFormProps) {
             toast.error(error.message || "Failed to update event details")
         } finally {
             setIsSaving(false)
-        }
-    }
-
-    const handleRegistrationToggle = async (checked: boolean) => {
-        if (isTogglingRegistration || checked === isRegistrationOpen) return
-
-        const message = checked
-            ? 'Open registrations for this event? Coaches will be able to add new entries.'
-            : 'Close registrations for this event? Coaches will no longer be able to add new entries.'
-
-        const confirmed = window.confirm(message)
-        if (!confirmed) return
-
-        setIsTogglingRegistration(true)
-        setIsRegistrationOpen(checked)
-        try {
-            await updateEventSettings(event.id, { is_registration_open: checked })
-            toast.success(`Registration ${checked ? 'opened' : 'closed'} successfully`)
-        } catch (error: any) {
-            setIsRegistrationOpen(!checked) // Revert on failure
-            toast.error(error.message || "Failed to update registration status")
-        } finally {
-            setIsTogglingRegistration(false)
         }
     }
 
@@ -92,24 +86,46 @@ export function EventSettingsForm({ event }: EventSettingsFormProps) {
 
     return (
         <div className="space-y-6 max-w-4xl">
-            <Card>
+            <Card className={tempClosesAt && new Date(tempClosesAt) > new Date() ? "border-emerald-500/50 shadow-sm" : ""}>
                 <CardHeader>
-                    <CardTitle>Registration Status</CardTitle>
-                    <CardDescription>Control whether new students can register for this event.</CardDescription>
+                    <CardTitle className="flex items-center gap-2">
+                        <Clock className="h-5 w-5 text-blue-500" />
+                        Temporary Open (Short Burst)
+                    </CardTitle>
+                    <CardDescription>Temporarily open registration for last-minute adjustments. It will automatically close when time expires.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex items-center justify-between rounded-lg border p-4">
-                        <div className="space-y-0.5">
-                            <Label className="text-base">Accept new entries</Label>
-                            <p className="text-sm text-muted-foreground">
-                                If closed, coaches will not be able to add new students to this event.
-                            </p>
-                        </div>
-                        <Switch
-                            checked={isRegistrationOpen}
-                            onCheckedChange={handleRegistrationToggle}
-                            disabled={isTogglingRegistration}
-                        />
+                    <div className="flex flex-col gap-4 rounded-lg border p-4">
+                        {tempClosesAt && new Date(tempClosesAt) > new Date() ? (
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="space-y-0.5">
+                                    <p className="font-medium text-emerald-600 dark:text-emerald-500">
+                                        Temporarily Open
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                        Closes at {new Date(tempClosesAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({new Date(tempClosesAt).toLocaleDateString()})
+                                    </p>
+                                </div>
+                                <Button variant="outline" onClick={() => handleTemporaryOpen(0)} disabled={isSaving}>
+                                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                                    Close Now
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="space-y-0.5">
+                                    <Label className="text-base">Open For:</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Select a duration below to open registration immediately.
+                                    </p>
+                                </div>
+                                <div className="flex gap-2 flex-wrap">
+                                    <Button variant="secondary" onClick={() => handleTemporaryOpen(15)} disabled={isSaving}>15 mins</Button>
+                                    <Button variant="secondary" onClick={() => handleTemporaryOpen(60)} disabled={isSaving}>1 hour</Button>
+                                    <Button variant="secondary" onClick={() => handleTemporaryOpen(180)} disabled={isSaving}>3 hours</Button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </CardContent>
             </Card>
