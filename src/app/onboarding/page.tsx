@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { completeOnboarding } from './actions'
 import { splitFullName, deriveFullName } from '@/lib/auth/profile'
+import { isUserIdentityVerified } from '@/lib/auth/verification'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { PendingButton } from '@/components/ui/pending-button'
@@ -34,6 +35,10 @@ export default async function OnboardingPage({
 
   if (!user) {
     redirect('/login')
+  }
+
+  if (!isUserIdentityVerified(user)) {
+    redirect(`/verify-email?email=${encodeURIComponent(user.email ?? '')}`)
   }
 
   const { data: profile } = await supabase

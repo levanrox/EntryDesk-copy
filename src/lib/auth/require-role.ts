@@ -60,7 +60,9 @@ async function fetchUserProfile({ createIfMissing = true }: GetUserProfileOption
         }
 
         profile = createdProfile
-    } else {
+    }
+
+    if (profile) {
         // If the profile was auto-created earlier with a placeholder name, sync it
         // from Google identity / user_metadata when available.
         const desiredFullName = deriveFullName(user)

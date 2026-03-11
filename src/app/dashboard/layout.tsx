@@ -1,6 +1,7 @@
 import { getUserProfileWithoutAutoCreate } from '@/lib/auth/require-role'
 import { ResponsiveDashboardFrame } from '@/components/dashboard/responsive-dashboard-frame'
 import { redirect } from 'next/navigation'
+import { isUserIdentityVerified } from '@/lib/auth/verification'
 
 export default async function DashboardLayout({
   children,
@@ -8,6 +9,10 @@ export default async function DashboardLayout({
   children: React.ReactNode
 }) {
   const { user, profile, role } = await getUserProfileWithoutAutoCreate()
+
+  if (!isUserIdentityVerified(user)) {
+    redirect(`/verify-email?email=${encodeURIComponent(user.email ?? '')}`)
+  }
 
   if (!profile) {
     redirect('/onboarding')

@@ -3,6 +3,9 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { isUserIdentityVerified } from '@/lib/auth/verification'
+
+const authCallbackRedirectTo = `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback?next=/dashboard`
 
 export async function login(formData: FormData) {
   const supabase = await createClient()
@@ -27,10 +30,21 @@ export async function login(formData: FormData) {
     if (/captcha/i.test(error.message)) {
       return redirect('/login?error=captcha_failed&tab=login')
     }
+    if (/email not confirmed|email not verified/i.test(error.message)) {
+      return redirect(`/verify-email?email=${encodeURIComponent(email)}`)
+    }
     if (/invalid login credentials/i.test(error.message)) {
       return redirect('/login?error=invalid_credentials&tab=login')
     }
     return redirect('/login?error=auth_failed&tab=login')
+  }
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (user && !isUserIdentityVerified(user)) {
+    redirect(`/verify-email?email=${encodeURIComponent(user.email ?? email)}`)
   }
 
   revalidatePath('/', 'layout')
@@ -55,6 +69,7 @@ export async function signup(formData: FormData) {
     password,
     options: {
       captchaToken,
+      emailRedirectTo: authCallbackRedirectTo,
       data: {
         full_name: `${first_name} ${last_name}`,
       }
@@ -69,7 +84,7 @@ export async function signup(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-    redirect('/login?message=check_email&tab=login')
+    redirect(`/verify-email?email=${encodeURIComponent(email)}`)
 }
 
 export async function loginWithGoogle() {

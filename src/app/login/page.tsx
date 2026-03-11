@@ -12,6 +12,7 @@ import { HistoryBackIconButton } from '@/components/app/history-back'
 import { ThemeSwitch } from '@/components/app/theme-toggle'
 import { Badge } from '@/components/ui/badge'
 import { CaptchaSubmitSection } from '@/components/auth/captcha-submit-section'
+import { isUserIdentityVerified } from '@/lib/auth/verification'
 
 type SearchParams = {
     error?: string | string[]
@@ -60,6 +61,9 @@ export default async function LoginPage({
     } = await supabase.auth.getUser()
 
     if (user) {
+        if (!isUserIdentityVerified(user)) {
+            redirect(`/verify-email?email=${encodeURIComponent(user.email ?? '')}`)
+        }
         redirect('/dashboard')
     }
 

@@ -64,6 +64,7 @@ To apply the schema:
 
 ### 5. Authentication Configuration
 **Email/Password** requires Supabase CAPTCHA protection to be enabled when Turnstile is configured in this app.
+Users must also verify their email before they can access the dashboard.
 
 **Cloudflare Turnstile for Email Login and Signup**:
 1. Create a Turnstile widget in Cloudflare and copy the site key and secret key.
