@@ -6,6 +6,7 @@ import { ArrowRight, Calendar, Users, ClipboardList, LayoutGrid, CheckSquare, Fo
 import { Badge } from '@/components/ui/badge'
 import { CoachActiveEventsCards } from '@/components/dashboard/coach-active-events-cards'
 import { formatDateRangeStable } from '@/lib/date'
+import { RegistrationDeadline } from '@/components/events/registration-deadline'
 
 type PublicEvent = {
     id: string
@@ -15,7 +16,9 @@ type PublicEvent = {
     location: string | null
     event_type: string | null
     description?: string | null
-    is_public: boolean
+    registration_close_date?: string | null
+    is_registration_open?: boolean | null
+    temporary_registration_closes_at?: string | null
 }
 
 type ApprovedEvent = {
@@ -25,6 +28,9 @@ type ApprovedEvent = {
     end_date: string
     location: string | null
     event_type: string | null
+    registration_close_date?: string | null
+    is_registration_open?: boolean | null
+    temporary_registration_closes_at?: string | null
 }
 
 type ApprovedApplication = {
@@ -40,6 +46,9 @@ type OrganizerEvent = {
     end_date: string
     location: string | null
     event_type: string | null
+    registration_close_date?: string | null
+    is_registration_open?: boolean | null
+    temporary_registration_closes_at?: string | null
 }
 
 export default async function DashboardPage() {
@@ -71,7 +80,7 @@ export default async function DashboardPage() {
 
         const { data: activeOrganizerEvents } = await supabase
             .from('events')
-            .select('id, title, start_date, end_date, location, event_type')
+            .select('id, title, start_date, end_date, location, event_type, registration_close_date, is_registration_open, temporary_registration_closes_at')
             .eq('organizer_id', user.id)
             .gte('end_date', today)
             .order('start_date', { ascending: true })
@@ -108,8 +117,7 @@ export default async function DashboardPage() {
                 .gte('events.end_date', today),
             supabase
                 .from('events')
-                .select('id, title, start_date, end_date, location, event_type, description, is_public')
-                .eq('is_public', true)
+                .select('id, title, start_date, end_date, location, event_type, description, is_public, registration_close_date, is_registration_open, temporary_registration_closes_at')
                 .order('start_date', { ascending: true }),
             supabase
                 .from('event_applications')
@@ -126,7 +134,10 @@ export default async function DashboardPage() {
                         start_date,
                         end_date,
                         location,
-                        event_type
+                        event_type,
+                        registration_close_date,
+                        is_registration_open,
+                        temporary_registration_closes_at
                     )
                 `)
                 .eq('coach_id', user.id)
@@ -389,6 +400,10 @@ export default async function DashboardPage() {
                                                         </>
                                                     ) : null}
                                                 </div>
+                                                <RegistrationDeadline
+                                                    className="mt-1"
+                                                    event={event}
+                                                />
                                             </div>
                                             <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
                                         </div>
@@ -458,6 +473,10 @@ export default async function DashboardPage() {
                                                             </>
                                                         )}
                                                     </div>
+                                                    <RegistrationDeadline
+                                                        className="mt-1"
+                                                        event={event}
+                                                    />
                                                 </div>
                                             </div>
                                             <Button variant="ghost" size="sm" className="h-7 text-xs opacity-0 group-hover:opacity-100 transition-opacity">

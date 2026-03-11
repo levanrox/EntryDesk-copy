@@ -2,6 +2,23 @@
 
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/require-role'
+import { isRegistrationClosed } from '@/lib/events/registration'
+
+async function ensureRegistrationOpenForEvent(supabase: any, eventId: string) {
+    const { data: event, error } = await supabase
+        .from('events')
+        .select('id, end_date, is_registration_open, registration_close_date')
+        .eq('id', eventId)
+        .single()
+
+    if (error || !event) {
+        throw new Error('Event not found')
+    }
+
+    if (isRegistrationClosed(event)) {
+        throw new Error('Registration is closed for this event')
+    }
+}
 
 export async function upsertEntry(formData: FormData) {
     const { supabase, user } = await requireRole('coach')
@@ -11,6 +28,8 @@ export async function upsertEntry(formData: FormData) {
     const category_id = formData.get('category_id') as string
     const event_day_id = formData.get('event_day_id') as string
     const participation_type = formData.get('participation_type') as string
+
+    await ensureRegistrationOpenForEvent(supabase, event_id)
 
     // Upsert logic: If entry exists for (event_id, student_id), update it.
     // We need to check if one exists first or rely on unique constraint?
@@ -56,6 +75,8 @@ export async function upsertEntry(formData: FormData) {
 export async function submitEntries(eventId: string) {
     const { supabase, user } = await requireRole('coach')
 
+    await ensureRegistrationOpenForEvent(supabase, eventId)
+
     // Update all 'draft' entries for this event and coach to 'submitted'
     const { error } = await supabase
         .from('entries')
@@ -73,6 +94,8 @@ export async function submitEntries(eventId: string) {
 
 export async function bulkCreateEntries(eventId: string, entries: { student_id: string, participation_type: string, event_day_id?: string | null }[]) {
     const { supabase, user } = await requireRole('coach')
+
+    await ensureRegistrationOpenForEvent(supabase, eventId)
 
     if (entries.length === 0) return { success: true }
 
@@ -99,6 +122,21 @@ export async function bulkCreateEntries(eventId: string, entries: { student_id: 
 export async function bulkSubmitEntries(entryIds: string[]) {
     const { supabase, user } = await requireRole('coach')
     if (entryIds.length === 0) return { success: true }
+
+    const { data: scopedEntries, error: scopedEntriesError } = await supabase
+        .from('entries')
+        .select('event_id')
+        .in('id', entryIds)
+        .eq('coach_id', user.id)
+
+    if (scopedEntriesError) {
+        throw new Error('Failed to validate entries')
+    }
+
+    const eventIds = Array.from(new Set((scopedEntries ?? []).map((entry: { event_id: string }) => entry.event_id)))
+    for (const eventId of eventIds) {
+        await ensureRegistrationOpenForEvent(supabase, eventId)
+    }
 
     // 1. Fetch entries with Student details to Validate
     const { data: entriesToValidate } = await supabase
@@ -150,6 +188,19 @@ export async function bulkSubmitEntries(entryIds: string[]) {
 export async function deleteEntry(entryId: string) {
     const { supabase, user } = await requireRole('coach')
 
+    const { data: entry, error: entryError } = await supabase
+        .from('entries')
+        .select('event_id')
+        .eq('id', entryId)
+        .eq('coach_id', user.id)
+        .single()
+
+    if (entryError || !entry) {
+        throw new Error('Entry not found')
+    }
+
+    await ensureRegistrationOpenForEvent(supabase, entry.event_id)
+
     const { error } = await supabase
         .from('entries')
         .delete()
@@ -165,6 +216,21 @@ export async function deleteEntry(entryId: string) {
 export async function bulkDeleteEntries(entryIds: string[]) {
     const { supabase, user } = await requireRole('coach')
     if (entryIds.length === 0) return { success: true }
+
+    const { data: scopedEntries, error: scopedEntriesError } = await supabase
+        .from('entries')
+        .select('event_id')
+        .in('id', entryIds)
+        .eq('coach_id', user.id)
+
+    if (scopedEntriesError) {
+        throw new Error('Failed to validate entries')
+    }
+
+    const eventIds = Array.from(new Set((scopedEntries ?? []).map((entry: { event_id: string }) => entry.event_id)))
+    for (const eventId of eventIds) {
+        await ensureRegistrationOpenForEvent(supabase, eventId)
+    }
 
     const { error } = await supabase
         .from('entries')

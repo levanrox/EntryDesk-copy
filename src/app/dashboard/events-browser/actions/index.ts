@@ -3,9 +3,24 @@
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/require-role'
 import { deriveFullName } from '@/lib/auth/profile'
+import { isRegistrationClosed } from '@/lib/events/registration'
 
 export async function applyToEvent(eventId: string) {
   const { supabase, user } = await requireRole('coach')
+
+  const { data: event, error: eventError } = await supabase
+    .from('events')
+    .select('id, end_date, is_registration_open, registration_close_date')
+    .eq('id', eventId)
+    .single()
+
+  if (eventError || !event) {
+    throw new Error('Event not found')
+  }
+
+  if (isRegistrationClosed(event)) {
+    return { success: false, message: 'Registration is closed for this event' }
+  }
 
   // Ensure we have a profile row for FK references (coach_id -> profiles.id)
   // This is needed because Supabase Auth does not auto-create rows in public.profiles.

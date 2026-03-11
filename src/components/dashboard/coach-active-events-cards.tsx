@@ -14,6 +14,8 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog'
 import { formatDateRangeStable } from '@/lib/date'
+import { RegistrationDeadline } from '@/components/events/registration-deadline'
+import { isRegistrationClosed } from '@/lib/events/registration'
 
 type CoachActiveEvent = {
     id: string
@@ -23,6 +25,9 @@ type CoachActiveEvent = {
     location: string | null
     event_type: string | null
     description?: string | null
+    registration_close_date?: string | null
+    is_registration_open?: boolean | null
+    temporary_registration_closes_at?: string | null
 }
 
 export function CoachActiveEventsCards({
@@ -39,6 +44,7 @@ export function CoachActiveEventsCards({
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {events.map((event) => {
                     const status = statusByEventId[event.id]
+                    const registrationClosed = isRegistrationClosed(event)
                     return (
                         <div key={event.id} className="group flex flex-col rounded-2xl border border-black/10 bg-gradient-to-b from-background/90 to-background/50 hover:bg-background/70 transition-colors p-5 shadow-md shadow-black/5 dark:border-white/10 dark:shadow-black/40">
                             <div className="flex items-start justify-between mb-4">
@@ -68,6 +74,9 @@ export function CoachActiveEventsCards({
                                         <span className="truncate max-w-[200px]">{event.location}</span>
                                     </div>
                                 )}
+                                <RegistrationDeadline
+                                    event={event}
+                                />
                             </div>
 
                             <div className="mt-auto pt-4 flex gap-3">
@@ -86,7 +95,7 @@ export function CoachActiveEventsCards({
                                         </Button>
                                     </Link>
                                 ) : (
-                                    <ApplyButton eventId={event.id} status={status} />
+                                    <ApplyButton eventId={event.id} status={status} registrationClosed={registrationClosed} />
                                 )}
                             </div>
                         </div>
@@ -125,6 +134,9 @@ export function CoachActiveEventsCards({
                                     <Users className="h-4 w-4" />
                                     <span>Open registration</span>
                                 </div>
+                                <RegistrationDeadline
+                                    event={selectedEvent}
+                                />
                             </div>
 
                             <div className="space-y-2 rounded-lg border border-border/50 p-4">

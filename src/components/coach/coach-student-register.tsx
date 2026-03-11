@@ -108,7 +108,8 @@ export function CoachStudentRegister({ students, existingStudentIds, eventId, ev
             toast.success(`${count} student${count > 1 ? 's' : ''} added to event`)
         } catch (e) {
             console.error(e)
-            toast.error('Failed to add students to event')
+            const message = e instanceof Error ? e.message : 'Failed to add students to event'
+            toast.error(message)
         } finally {
             setIsAdding(false)
         }

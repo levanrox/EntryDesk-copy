@@ -12,6 +12,8 @@ type PublicEvent = {
     location: string | null
     max_participants: number | null
     description: string | null
+    registration_close_date?: string | null
+    is_registration_open?: boolean | null
 }
 
 type PublicEventsResponse = {
