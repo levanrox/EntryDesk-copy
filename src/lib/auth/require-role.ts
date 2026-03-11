@@ -5,7 +5,11 @@ import { deriveFullName, looksLikeRoleName } from '@/lib/auth/profile'
 
 export type UserRole = 'organizer' | 'coach' | 'admin'
 
-export const getUserProfile = cache(async () => {
+type GetUserProfileOptions = {
+    createIfMissing?: boolean
+}
+
+async function fetchUserProfile({ createIfMissing = true }: GetUserProfileOptions = {}) {
     const supabase = await createClient()
     const {
         data: { user },
@@ -29,7 +33,7 @@ export const getUserProfile = cache(async () => {
 
     let profile = existingProfile
 
-    if (!profile) {
+    if (!profile && createIfMissing) {
         const email = user.email
         if (!email) {
             throw new Error('Missing email on user; cannot create profile')
@@ -83,7 +87,13 @@ export const getUserProfile = cache(async () => {
     const role = (profile?.role as UserRole) || 'coach'
 
     return { supabase, user, profile, role }
-})
+}
+
+export const getUserProfile = cache(async () => fetchUserProfile())
+
+export const getUserProfileWithoutAutoCreate = cache(async () =>
+    fetchUserProfile({ createIfMissing: false })
+)
 
 export async function requireRole(
     allowed: UserRole | UserRole[],

@@ -1,15 +1,18 @@
-import { getUserProfile } from '@/lib/auth/require-role'
+import { getUserProfileWithoutAutoCreate } from '@/lib/auth/require-role'
 import { ResponsiveDashboardFrame } from '@/components/dashboard/responsive-dashboard-frame'
+import { redirect } from 'next/navigation'
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const { user, profile, role } = await getUserProfile()
+  const { user, profile, role } = await getUserProfileWithoutAutoCreate()
 
-  // If no profile exists (e.g. first login), we should probably guide them to setup
-  // For now, let's assume profile is created on signup trigger or similar
+  if (!profile) {
+    redirect('/onboarding')
+  }
+
   const roleLabel = role === 'organizer' ? 'Organizer' : role === 'admin' ? 'Admin' : 'Coach'
 
   return (

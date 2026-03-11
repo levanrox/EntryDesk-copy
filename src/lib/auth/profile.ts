@@ -49,3 +49,18 @@ export function deriveFullName(user: User): string {
 
     return 'User'
 }
+
+export function splitFullName(fullName: string | null | undefined) {
+    const normalized = normalizeCandidate(fullName)
+
+    if (!normalized) {
+        return { firstName: '', lastName: '' }
+    }
+
+    const [firstName, ...rest] = normalized.split(/\s+/)
+
+    return {
+        firstName,
+        lastName: rest.join(' '),
+    }
+}
