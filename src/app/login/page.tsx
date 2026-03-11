@@ -13,6 +13,8 @@ import { ThemeSwitch } from '@/components/app/theme-toggle'
 import { Badge } from '@/components/ui/badge'
 import { CaptchaSubmitSection } from '@/components/auth/captcha-submit-section'
 import { isUserIdentityVerified } from '@/lib/auth/verification'
+import { PasswordField } from '@/components/auth/password-field'
+import { RegisterPasswordSection } from '@/components/auth/register-password-section'
 
 type SearchParams = {
     error?: string | string[]
@@ -28,6 +30,7 @@ function getErrorMessage(errorCode?: string) {
     if (!errorCode) return null
     if (errorCode === 'captcha_required') return 'Complete the security check before submitting the form.'
     if (errorCode === 'captcha_failed') return 'Security verification failed or expired. Try the challenge again.'
+    if (errorCode === 'password_mismatch') return 'Passwords do not match. Re-enter them and try again.'
     if (errorCode === 'invalid_credentials') return 'Invalid email or password. Please try again.'
     if (errorCode === 'auth_failed') return 'Unable to sign in right now. Please try again.'
     if (errorCode === 'signup_failed') return 'Unable to create your account. Please review your details and retry.'
@@ -173,10 +176,9 @@ export default async function LoginPage({
                                             Forgot password?
                                         </Link>
                                     </div>
-                                    <Input
+                                    <PasswordField
                                         id="login-password"
                                         name="password"
-                                        type="password"
                                         className="h-11 border-border/50 bg-background/70 text-sm dark:border-white/[0.10]"
                                         required
                                     />
@@ -221,17 +223,7 @@ export default async function LoginPage({
                                         required
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="register-password">Password</Label>
-                                    <Input
-                                        id="register-password"
-                                        name="password"
-                                        type="password"
-                                        className="h-11 border-border/50 bg-background/70 text-sm dark:border-white/[0.10]"
-                                        required
-                                    />
-                                </div>
-                                <CaptchaSubmitSection formId="register-form" submitText="Create account" pendingText="Creating account..." />
+                                <RegisterPasswordSection formId="register-form" />
                             </form>
                         </TabsContent>
                     </Tabs>

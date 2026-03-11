@@ -10,6 +10,7 @@ type CaptchaSubmitSectionProps = {
   submitText: string
   pendingText: string
   showArrow?: boolean
+  isEnabled?: boolean
 }
 
 export function CaptchaSubmitSection({
@@ -17,17 +18,19 @@ export function CaptchaSubmitSection({
   submitText,
   pendingText,
   showArrow = false,
+  isEnabled = true,
 }: CaptchaSubmitSectionProps) {
   const [isReady, setIsReady] = useState(false)
+  const canSubmit = isReady && isEnabled
 
   return (
     <>
       <TurnstileField formId={formId} onTokenChange={setIsReady} />
       <PendingButton
         type="submit"
-        disabled={!isReady}
+        disabled={!canSubmit}
         pendingText={pendingText}
-        className={isReady ? 'mt-1 h-11 w-full bg-emerald-600 text-white hover:bg-emerald-700' : 'mt-1 h-11 w-full bg-muted text-muted-foreground hover:bg-muted'}
+        className={canSubmit ? 'mt-1 h-11 w-full bg-emerald-600 text-white hover:bg-emerald-700' : 'mt-1 h-11 w-full bg-muted text-muted-foreground hover:bg-muted'}
       >
         {submitText}
         {showArrow ? <ArrowRight className="h-4 w-4" /> : null}

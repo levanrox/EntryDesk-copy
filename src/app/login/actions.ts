@@ -56,9 +56,14 @@ export async function signup(formData: FormData) {
 
   const email = formData.get('email') as string
   const password = formData.get('password') as string
+  const confirm_password = formData.get('confirm_password') as string
   const first_name = formData.get('first_name') as string
   const last_name = formData.get('last_name') as string
   const captchaToken = formData.get('captchaToken') as string | null
+
+  if (password !== confirm_password) {
+    return redirect('/login?error=password_mismatch&tab=register')
+  }
 
   if (!captchaToken) {
     return redirect('/login?error=captcha_required&tab=register')
