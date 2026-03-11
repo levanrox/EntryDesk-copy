@@ -36,7 +36,7 @@ export async function deleteEvent(formData: FormData) {
     redirect('/dashboard/events')
 }
 
-export async function updateEventSettings(eventId: string, data: { title?: string; location?: string; is_registration_open?: boolean }) {
+export async function updateEventSettings(eventId: string, data: { title?: string; location?: string; is_registration_open?: boolean; is_public?: boolean; temporary_registration_closes_at?: string | null }) {
     if (!eventId) throw new Error('Missing eventId')
 
     const { supabase, user } = await requireRole(['organizer', 'admin'])

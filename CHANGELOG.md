@@ -84,6 +84,16 @@ This doc captures the main issues encountered while setting up/running the app l
 - **23rd session:** Added per-event Settings page (title/location edits, registration open/close toggle, and a “Danger Zone” delete flow).
 - **23rd session:** Added DB support for registration/chest numbers (triggers + view rebuild) and added submit locks to reduce accidental double-submit spam.
 
+- **24th session:** Fixed event creation stability issues (500 fallback handling, validation fixes, label/id accessibility corrections, and clearer submit error handling).
+- **24th session:** Fixed Radix module resolution errors by correcting imports and installing missing scoped packages for Accordion/Switch.
+- **24th session:** Added a unified registration deadline row (`Last date for Registration:`) with open/closed status indicator across public/coach/organizer event surfaces.
+- **24th session:** Updated public event cards to keep metadata single-line/truncated for equal card heights, while preserving full details inside the `View event` dialog.
+- **24th session:** Restored public past-event card behavior to keep `View event` dialog accessible after user-requested revert.
+- **24th session:** Adjusted coach-facing queries so `is_public` no longer hides private events in dashboard/browser views (hero/public API remains `is_public`-filtered).
+
+- **25th session:** Enforced registration-closed behavior for coaches end-to-end: active events remain visible, but all entry mutations/actions are locked when registration is closed (manual toggle, close-date elapsed, or past event).
+- **25th session:** Added a shared registration-lock helper and aligned coach UI state/messages (`Registration Closed`) with backend guardrails.
+
 ## 1) Supabase migration error: `must be owner of table users`
 
 **Symptom**
@@ -257,6 +267,185 @@ This section captures the second round of issues and UX improvements around navi
 # Session 3 — Log of Fixes, Additions & Modifications
 
 This session focused on making the dashboard behave like a “real product”: reliable data flows (especially coach→event apply), clearer organizer vs coach meaning, clickable + consistent UI patterns, and navigation that behaves predictably.
+
+---
+
+# Session 24 — Event Creation Hardening, Registration UX, and Event Visibility Rules
+
+This session focused on event reliability (create flow + build stability), consistent registration-deadline display, card layout consistency, and aligning visibility behavior to product intent.
+
+## 1) Event create failures (`500`) + confusing validation behavior
+
+**Symptom**
+- Event creation intermittently failed with a generic `Failed to create event` alert and `POST /dashboard/events 500`.
+- Registration date validation rejected valid flows where registration closes before the event starts.
+- Browser accessibility warnings reported mismatched `<label for=...>` references.
+
+**Root cause**
+- Server action could throw on DB/schema mismatch and surfaced only a generic client alert.
+- Validation rule incorrectly required registration close date to be *between* start/end.
+- Multiple form labels targeted non-existent element ids.
+
+**Fix**
+- Hardened create-event server action error handling and validation responses.
+- Corrected date rules:
+  - event `start_date <= end_date`
+  - `registration_close_date <= start_date`
+- Fixed label/id mappings in create-event dialog and wired submit handling to display returned server messages.
+
+**Where**
+- `src/app/dashboard/events/actions/index.ts`
+- `src/components/events/create-event-dialog.tsx`
+
+**Why**
+- Prevents opaque failures, keeps validation aligned with real event workflows, and improves accessibility/autofill behavior.
+
+---
+
+## 2) Build break: incorrect Radix imports
+
+**Symptom**
+- Build failed with `Module not found` for accordion/switch UI modules.
+
+**Root cause**
+- UI primitives were imported from the umbrella `radix-ui` package name instead of scoped React packages.
+
+**Fix**
+- Replaced imports with:
+  - `@radix-ui/react-accordion`
+  - `@radix-ui/react-switch`
+- Added/installed missing direct dependencies.
+
+**Where**
+- `src/components/ui/accordion.tsx`
+- `src/components/ui/switch.tsx`
+- `package.json`
+
+**Why**
+- Ensures Turbopack/Next resolves modules reliably and avoids transitive dependency ambiguity.
+
+---
+
+## 3) Registration deadline visibility across event surfaces
+
+**Symptom**
+- Registration close date/status was missing or inconsistent across hero/public, coach, and organizer event cards.
+
+**Fix**
+- Added shared `RegistrationDeadline` component displaying:
+  - `Last date for Registration: DD/MM/YYYY`
+  - subtle status dot (green=open, blue=closed)
+- Integrated the row into key event list/card surfaces and dialog metadata.
+
+**Where**
+- `src/components/events/registration-deadline.tsx`
+- `src/components/app/public-events-section.tsx`
+- `src/components/app/public-events-shell.tsx`
+- `src/app/api/public-events/route.ts`
+- `src/app/dashboard/events/page.tsx`
+- `src/app/dashboard/events-browser/page.tsx`
+- `src/app/dashboard/page.tsx`
+- `src/components/dashboard/coach-active-events-cards.tsx`
+- `src/app/dashboard/entries/page.tsx`
+
+**Why**
+- Provides a consistent and visible registration deadline signal everywhere users evaluate event availability.
+
+---
+
+## 4) Public card height inconsistency due to wrapping addresses
+
+**Symptom**
+- Public event cards became uneven because long location/address text wrapped to multiple lines.
+
+**Fix**
+- Enforced one-line truncation for card metadata rows (title/date/location/registration row) and kept full details in dialog.
+- Stabilized card layout using full-height flex column behavior.
+
+**Where**
+- `src/components/app/public-events-section.tsx`
+- `src/components/events/registration-deadline.tsx`
+
+**Why**
+- Keeps grid rhythm visually consistent while preserving full content discoverability via `View event`.
+
+---
+
+## 5) Visibility behavior intent: `is_public` should control hero only
+
+**Symptom**
+- Coaches could not see private events because coach-facing queries were still filtered by `is_public = true`.
+
+**Fix**
+- Removed `is_public` filtering from coach dashboard/browser queries.
+- Kept public API (`/api/public-events`) filtered by `is_public` for hero/public-only listing.
+
+**Where**
+- `src/app/dashboard/events-browser/page.tsx`
+- `src/app/dashboard/page.tsx`
+- `src/app/api/public-events/route.ts` (unchanged behavior intentionally)
+
+**Why**
+- Aligns product behavior: public toggle controls hero/public exposure, not coach operational visibility.
+
+---
+
+# Session 25 — Registration Closed Lockdown for Coach Entry Flow
+
+This session enforced product behavior where registration closure should behave like a past event for coach actions, even when the event still appears under Active Events.
+
+## 1) Coaches could still create/submit entries after organizer closed registration
+
+**Symptom**
+- After organizer toggled registration off (or close date passed), coaches could still add/edit/submit/delete entries.
+- This conflicted with expected behavior: event can stay visible, but coach entry operations must be inaccessible.
+
+**Root cause**
+- Coach mutation actions were checking role/auth only, not event registration state.
+- Read-only UI mode on coach event page was tied primarily to past-event date checks.
+
+**Fix**
+- Added a shared registration lock helper that treats an event as closed when any of these are true:
+  - event is past (`end_date < today`)
+  - organizer toggled `is_registration_open = false`
+  - `registration_close_date` is before today
+- Applied backend guardrails to all coach entry mutation actions.
+- Switched coach event page read-only mode to use the shared registration lock state.
+
+**Where**
+- `src/lib/events/registration.ts`
+- `src/app/dashboard/entries/actions/index.ts`
+- `src/app/dashboard/entries/[eventId]/page.tsx`
+
+**Why**
+- Ensures business rules are enforced server-side (cannot be bypassed via UI/devtools) and keeps behavior consistent with organizer registration controls.
+
+---
+
+## 2) Event application and coach CTA states did not reflect closed registration clearly
+
+**Symptom**
+- Coaches could still attempt `Request to Participate` in some flows.
+- UI feedback for blocked actions was too generic.
+
+**Fix**
+- Blocked `applyToEvent` server action when registration is closed.
+- Added `registrationClosed` UI path in apply button to render disabled `Registration Closed` state.
+- Passed registration-closed state from active coach event surfaces.
+- Improved coach bulk/register error surfaces to show specific server messages (e.g. `Registration is closed for this event`).
+
+**Where**
+- `src/app/dashboard/events-browser/actions/index.ts`
+- `src/components/events/apply-button.tsx`
+- `src/app/dashboard/events-browser/page.tsx`
+- `src/components/dashboard/coach-active-events-cards.tsx`
+- `src/components/coach/coach-entries-list.tsx`
+- `src/components/coach/coach-student-register.tsx`
+
+**Why**
+- Keeps coach UX explicit and predictable while matching backend enforcement.
+
+
 
 Below is a detailed, chronological and technical log of what changed, why it was needed, and how it was implemented.
 

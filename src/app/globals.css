@@ -366,3 +366,18 @@ body {
     transform: scale(0.985);
   }
 }
+
+@layer utilities {
+  @keyframes pulse-gentle {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.4;
+    }
+  }
+
+  .animate-pulse-gentle {
+    animation: pulse-gentle 3s ease-in-out infinite;
+  }
+}

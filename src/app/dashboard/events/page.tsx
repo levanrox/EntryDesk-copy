@@ -6,6 +6,7 @@ import { DashboardPageHeader } from '@/components/dashboard/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, MapPin, ArrowRight, Globe, Lock } from 'lucide-react'
 import { PaginationControls } from '@/components/ui/pagination-controls'
+import { RegistrationDeadline } from '@/components/events/registration-deadline'
 
 export default async function EventsPage({
   searchParams,
@@ -132,6 +133,10 @@ export default async function EventsPage({
                           </>
                         )}
                       </div>
+                      <RegistrationDeadline
+                        className="mt-1"
+                        event={event}
+                      />
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

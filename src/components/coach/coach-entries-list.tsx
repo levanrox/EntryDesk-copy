@@ -103,10 +103,15 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
         if (!confirm(`Submit ${selectedIds.size} entries?`)) return
         setIsSubmitting(true)
         try {
-            await bulkSubmitEntries(Array.from(selectedIds))
+            const result = await bulkSubmitEntries(Array.from(selectedIds))
+            if (result?.success === false && result?.message) {
+                alert(result.message)
+                return
+            }
             setSelectedIds(new Set())
         } catch (e) {
-            alert('Failed to submit')
+            const message = e instanceof Error ? e.message : 'Failed to submit'
+            alert(message)
         } finally {
             setIsSubmitting(false)
         }
@@ -119,7 +124,8 @@ export function CoachEntriesList({ entries, eventDays, dojos, statusPreset, isRe
             await bulkDeleteEntries(Array.from(selectedIds))
             setSelectedIds(new Set())
         } catch (e) {
-            alert('Failed to delete')
+            const message = e instanceof Error ? e.message : 'Failed to delete'
+            alert(message)
         } finally {
             setIsDeleting(false)
         }

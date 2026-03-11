@@ -1,0 +1,7 @@
+db.sql
+migration.sql
+prevent_duplicate_events.sql
+20240304_registration_and_chest_no.sql
+registration open close toggle.sql
+20260309_registration_close_date.sql
+20260310234831_temporary_registration.sql

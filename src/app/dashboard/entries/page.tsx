@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Calendar, ArrowRight, CheckCircle2, MapPin, ClipboardList } from 'lucide-react'
 import { DashboardPageHeader } from '@/components/dashboard/page-header'
 import { PaginationControls } from '@/components/ui/pagination-controls'
+import { RegistrationDeadline } from '@/components/events/registration-deadline'
 
 type ApprovedEvent = {
     id: string
@@ -12,6 +13,9 @@ type ApprovedEvent = {
     end_date: string
     location?: string | null
     description?: string | null
+    registration_close_date?: string | null
+    is_registration_open?: boolean | null
+    temporary_registration_closes_at?: string | null
 }
 
 function isApprovedEvent(value: unknown): value is ApprovedEvent {
@@ -47,7 +51,10 @@ export default async function EntriesPage({
             start_date, 
             end_date,
             location, 
-            description
+            description,
+            registration_close_date,
+            is_registration_open,
+            temporary_registration_closes_at
         )
     `, { count: 'exact' })
         .eq('coach_id', user.id)
@@ -110,6 +117,10 @@ export default async function EntriesPage({
                                                         </>
                                                     )}
                                                 </div>
+                                                <RegistrationDeadline
+                                                    className="mt-1"
+                                                    event={event}
+                                                />
                                             </div>
                                         </div>
                                         <Button variant="ghost" size="sm" className="h-7 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
