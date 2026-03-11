@@ -50,6 +50,7 @@ cp .env.example .env.local
 Fill in the required values from your Supabase dashboard:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_TURNSTILE_SITE_KEY` (Cloudflare Turnstile site key used by login and signup)
 - `NEXT_PUBLIC_BASE_URL` (Defaults to `http://localhost:3000` for local dev)
 
 ### 4. Database Schema Setup
@@ -62,7 +63,14 @@ To apply the schema:
 *This will generate the required tables (`profiles`, `dojos`, `students`, `events`, etc.), enums, RLS policies, and the `organizer_entries_view`.*
 
 ### 5. Authentication Configuration
-**Email/Password** works immediately out of the box after setting up your Supabase project.
+**Email/Password** requires Supabase CAPTCHA protection to be enabled when Turnstile is configured in this app.
+
+**Cloudflare Turnstile for Email Login and Signup**:
+1. Create a Turnstile widget in Cloudflare and copy the site key and secret key.
+2. Add the site key to your local environment as `NEXT_PUBLIC_TURNSTILE_SITE_KEY`.
+3. In Supabase Dashboard, go to **Authentication** → **Bot and Abuse Protection**.
+4. Enable CAPTCHA protection, choose **Cloudflare Turnstile**, and paste the Turnstile secret key.
+5. Save the settings before testing login or signup.
 
 **Google OAuth (Optional)**:
 1. Navigate to Supabase Dashboard → **Authentication** → **Providers** → **Google**.

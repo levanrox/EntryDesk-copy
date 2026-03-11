@@ -9,13 +9,24 @@ export async function login(formData: FormData) {
 
   const email = formData.get('email') as string
   const password = formData.get('password') as string
+  const captchaToken = formData.get('captchaToken') as string | null
+
+  if (!captchaToken) {
+    return redirect('/login?error=captcha_required&tab=login')
+  }
 
   const { error } = await supabase.auth.signInWithPassword({
     email,
     password,
+    options: {
+      captchaToken,
+    },
   })
 
   if (error) {
+    if (/captcha/i.test(error.message)) {
+      return redirect('/login?error=captcha_failed&tab=login')
+    }
     if (/invalid login credentials/i.test(error.message)) {
       return redirect('/login?error=invalid_credentials&tab=login')
     }
@@ -33,11 +44,17 @@ export async function signup(formData: FormData) {
   const password = formData.get('password') as string
   const first_name = formData.get('first_name') as string
   const last_name = formData.get('last_name') as string
+  const captchaToken = formData.get('captchaToken') as string | null
+
+  if (!captchaToken) {
+    return redirect('/login?error=captcha_required&tab=register')
+  }
 
   const { error } = await supabase.auth.signUp({
     email,
     password,
     options: {
+      captchaToken,
       data: {
         full_name: `${first_name} ${last_name}`,
       }
@@ -45,6 +62,9 @@ export async function signup(formData: FormData) {
   })
 
   if (error) {
+      if (/captcha/i.test(error.message)) {
+        return redirect('/login?error=captcha_failed&tab=register')
+      }
       return redirect('/login?error=signup_failed&tab=register')
   }
 

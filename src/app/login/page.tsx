@@ -11,7 +11,7 @@ import Image from 'next/image'
 import { HistoryBackIconButton } from '@/components/app/history-back'
 import { ThemeSwitch } from '@/components/app/theme-toggle'
 import { Badge } from '@/components/ui/badge'
-import { ArrowRight } from 'lucide-react'
+import { CaptchaSubmitSection } from '@/components/auth/captcha-submit-section'
 
 type SearchParams = {
     error?: string | string[]
@@ -25,6 +25,8 @@ function getSingleParam(value: string | string[] | undefined) {
 
 function getErrorMessage(errorCode?: string) {
     if (!errorCode) return null
+    if (errorCode === 'captcha_required') return 'Complete the security check before submitting the form.'
+    if (errorCode === 'captcha_failed') return 'Security verification failed or expired. Try the challenge again.'
     if (errorCode === 'invalid_credentials') return 'Invalid email or password. Please try again.'
     if (errorCode === 'auth_failed') return 'Unable to sign in right now. Please try again.'
     if (errorCode === 'signup_failed') return 'Unable to create your account. Please review your details and retry.'
@@ -147,7 +149,7 @@ export default async function LoginPage({
                         </TabsList>
 
                         <TabsContent value="login" className="mt-0">
-                            <form action={login} className="grid gap-4">
+                            <form id="login-form" action={login} className="grid gap-4">
                                 <NavigationOnPending title="Please wait while we log you in" />
                                 <div className="space-y-2">
                                     <Label htmlFor="login-email">Email</Label>
@@ -175,15 +177,12 @@ export default async function LoginPage({
                                         required
                                     />
                                 </div>
-                                <PendingButton type="submit" className="mt-1 h-11 w-full gap-2 text-sm" pendingText="Signing in...">
-                                    Sign in
-                                    <ArrowRight className="h-4 w-4" />
-                                </PendingButton>
+                                <CaptchaSubmitSection formId="login-form" submitText="Sign in" pendingText="Signing in..." showArrow />
                             </form>
                         </TabsContent>
 
                         <TabsContent value="register" className="mt-0">
-                            <form action={signup} className="grid gap-4">
+                            <form id="register-form" action={signup} className="grid gap-4">
                                 <NavigationOnPending title="Creating your account" />
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="space-y-2">
@@ -228,9 +227,7 @@ export default async function LoginPage({
                                         required
                                     />
                                 </div>
-                                <PendingButton type="submit" className="mt-1 h-11 w-full text-sm" pendingText="Creating account...">
-                                    Create account
-                                </PendingButton>
+                                <CaptchaSubmitSection formId="register-form" submitText="Create account" pendingText="Creating account..." />
                             </form>
                         </TabsContent>
                     </Tabs>
