@@ -8,6 +8,7 @@ import { Calendar, MapPin, ArrowRight, FolderOpen, CheckCircle2, Clock, XCircle 
 import { PaginationControls } from '@/components/ui/pagination-controls'
 import { RegistrationDeadline } from '@/components/events/registration-deadline'
 import { isRegistrationClosed } from '@/lib/events/registration'
+import { formatEventLevelLabel } from '@/lib/events/level'
 
 export default async function EventBrowserPage({
     searchParams,
@@ -88,6 +89,9 @@ export default async function EventBrowserPage({
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-sm font-medium truncate">{event.title}</span>
                                                     <Badge className="capitalize text-[10px] px-1.5 py-0" variant="secondary">{event.event_type}</Badge>
+                                                    {event.event_level ? (
+                                                        <Badge className="text-[10px] px-1.5 py-0" variant="outline">{formatEventLevelLabel(event.event_level)}</Badge>
+                                                    ) : null}
                                                     {status && (
                                                         <span className="flex items-center gap-0.5 text-[10px] font-medium">
                                                             {getStatusIcon(status)}
@@ -160,6 +164,9 @@ export default async function EventBrowserPage({
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-sm font-medium truncate">{event.title}</span>
                                                     <Badge className="capitalize text-[10px] px-1.5 py-0" variant="secondary">{event.event_type}</Badge>
+                                                    {event.event_level ? (
+                                                        <Badge className="text-[10px] px-1.5 py-0" variant="outline">{formatEventLevelLabel(event.event_level)}</Badge>
+                                                    ) : null}
                                                     {status && (
                                                         <span className="flex items-center gap-0.5 text-[10px] font-medium">
                                                             {getStatusIcon(status)}
@@ -242,6 +249,9 @@ export default async function EventBrowserPage({
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-sm font-medium truncate">{event.title}</span>
                                                         <Badge className="capitalize text-[10px] px-1.5 py-0" variant="secondary">{event.event_type}</Badge>
+                                                        {event.event_level ? (
+                                                            <Badge className="text-[10px] px-1.5 py-0" variant="outline">{formatEventLevelLabel(event.event_level)}</Badge>
+                                                        ) : null}
                                                         {status && (
                                                             <span className="flex items-center gap-0.5 text-[10px] font-medium">
                                                                 {getStatusIcon(status)}

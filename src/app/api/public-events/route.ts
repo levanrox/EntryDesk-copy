@@ -6,7 +6,7 @@ export async function GET() {
         const supabase = await createClient()
         const { data, error } = await supabase
             .from('events')
-            .select('id,title,event_type,start_date,end_date,location,description,registration_close_date,is_registration_open')
+            .select('id,title,event_type,event_level,start_date,end_date,location,description,registration_close_date,is_registration_open')
             .eq('is_public', true)
             .order('start_date', { ascending: true })
 

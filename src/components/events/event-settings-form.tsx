@@ -9,23 +9,37 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { toast } from 'sonner'
-import { Loader2, AlertTriangle, ChevronDown, ChevronUp, Clock } from 'lucide-react'
+import { Loader2, AlertTriangle, Clock } from 'lucide-react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
+import { EVENT_LEVEL_OPTIONS, type EventLevel } from '@/lib/events/level'
 
 interface EventSettingsFormProps {
     event: {
         id: string
         title: string
         location: string | null
+        event_level?: EventLevel | null
         is_registration_open: boolean
         is_public: boolean
         temporary_registration_closes_at?: string | null
     }
 }
 
+function getErrorMessage(error: unknown, fallback: string) {
+    return error instanceof Error ? error.message : fallback
+}
+
 export function EventSettingsForm({ event }: EventSettingsFormProps) {
     const [title, setTitle] = useState(event.title)
     const [location, setLocation] = useState(event.location || '')
+    const [eventLevel, setEventLevel] = useState<EventLevel | ''>(event.event_level || '')
     const [isPublic, setIsPublic] = useState(event.is_public)
     const [isSaving, setIsSaving] = useState(false)
     const [isTogglingVisibility, setIsTogglingVisibility] = useState(false)
@@ -41,8 +55,8 @@ export function EventSettingsForm({ event }: EventSettingsFormProps) {
             await updateEventSettings(event.id, { temporary_registration_closes_at: newTime })
             setTempClosesAt(newTime)
             toast.success(minutes > 0 ? `Registration opened for ${minutes} minutes` : 'Temporary open closed')
-        } catch (error: any) {
-            toast.error(error.message || 'Failed to update temporary open status')
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to update temporary open status'))
         } finally {
             setIsSaving(false)
         }
@@ -52,10 +66,10 @@ export function EventSettingsForm({ event }: EventSettingsFormProps) {
         e.preventDefault()
         setIsSaving(true)
         try {
-            await updateEventSettings(event.id, { title, location })
+            await updateEventSettings(event.id, { title, location, event_level: eventLevel || null })
             toast.success("Event details updated successfully")
-        } catch (error: any) {
-            toast.error(error.message || "Failed to update event details")
+        } catch (error) {
+            toast.error(getErrorMessage(error, 'Failed to update event details'))
         } finally {
             setIsSaving(false)
         }
@@ -76,9 +90,9 @@ export function EventSettingsForm({ event }: EventSettingsFormProps) {
         try {
             await updateEventSettings(event.id, { is_public: checked })
             toast.success(`Event is now ${checked ? 'public' : 'private'}`)
-        } catch (error: any) {
+        } catch (error) {
             setIsPublic(!checked)
-            toast.error(error.message || 'Failed to update event visibility')
+            toast.error(getErrorMessage(error, 'Failed to update event visibility'))
         } finally {
             setIsTogglingVisibility(false)
         }
@@ -177,6 +191,19 @@ export function EventSettingsForm({ event }: EventSettingsFormProps) {
                                 onChange={(e) => setLocation(e.target.value)}
                                 placeholder="E.g. 123 Main St, City, ST 12345"
                             />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="event_level">Event Level</Label>
+                            <Select value={eventLevel || undefined} onValueChange={(value) => setEventLevel(value as EventLevel)}>
+                                <SelectTrigger id="event_level">
+                                    <SelectValue placeholder="Select level" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {EVENT_LEVEL_OPTIONS.map((option) => (
+                                        <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
                         <Button type="submit" disabled={isSaving}>
                             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

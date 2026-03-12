@@ -2,6 +2,7 @@
 
 import { requireRole } from '@/lib/auth/require-role'
 import { redirect } from 'next/navigation'
+import { isEventLevel, type EventLevel } from '@/lib/events/level'
 
 export async function deleteEvent(formData: FormData) {
     const eventIdValue = formData.get('eventId')
@@ -36,8 +37,12 @@ export async function deleteEvent(formData: FormData) {
     redirect('/dashboard/events')
 }
 
-export async function updateEventSettings(eventId: string, data: { title?: string; location?: string; is_registration_open?: boolean; is_public?: boolean; temporary_registration_closes_at?: string | null }) {
+export async function updateEventSettings(eventId: string, data: { title?: string; location?: string; event_level?: EventLevel | null; is_registration_open?: boolean; is_public?: boolean; temporary_registration_closes_at?: string | null }) {
     if (!eventId) throw new Error('Missing eventId')
+
+    if (typeof data.event_level === 'string' && !isEventLevel(data.event_level)) {
+        throw new Error('Invalid event level')
+    }
 
     const { supabase, user } = await requireRole(['organizer', 'admin'])
 

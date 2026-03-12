@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { CoachActiveEventsCards } from '@/components/dashboard/coach-active-events-cards'
 import { formatDateRangeStable } from '@/lib/date'
 import { RegistrationDeadline } from '@/components/events/registration-deadline'
+import { formatEventLevelLabel } from '@/lib/events/level'
 
 type PublicEvent = {
     id: string
@@ -15,6 +16,7 @@ type PublicEvent = {
     end_date: string
     location: string | null
     event_type: string | null
+    event_level?: string | null
     description?: string | null
     registration_close_date?: string | null
     is_registration_open?: boolean | null
@@ -28,6 +30,7 @@ type ApprovedEvent = {
     end_date: string
     location: string | null
     event_type: string | null
+    event_level?: string | null
     registration_close_date?: string | null
     is_registration_open?: boolean | null
     temporary_registration_closes_at?: string | null
@@ -46,6 +49,7 @@ type OrganizerEvent = {
     end_date: string
     location: string | null
     event_type: string | null
+    event_level?: string | null
     registration_close_date?: string | null
     is_registration_open?: boolean | null
     temporary_registration_closes_at?: string | null
@@ -80,7 +84,7 @@ export default async function DashboardPage() {
 
         const { data: activeOrganizerEvents } = await supabase
             .from('events')
-            .select('id, title, start_date, end_date, location, event_type, registration_close_date, is_registration_open, temporary_registration_closes_at')
+            .select('id, title, start_date, end_date, location, event_type, event_level, registration_close_date, is_registration_open, temporary_registration_closes_at')
             .eq('organizer_id', user.id)
             .gte('end_date', today)
             .order('start_date', { ascending: true })
@@ -117,7 +121,7 @@ export default async function DashboardPage() {
                 .gte('events.end_date', today),
             supabase
                 .from('events')
-                .select('id, title, start_date, end_date, location, event_type, description, is_public, registration_close_date, is_registration_open, temporary_registration_closes_at')
+                .select('id, title, start_date, end_date, location, event_type, event_level, description, is_public, registration_close_date, is_registration_open, temporary_registration_closes_at')
                 .order('start_date', { ascending: true }),
             supabase
                 .from('event_applications')
@@ -135,6 +139,7 @@ export default async function DashboardPage() {
                         end_date,
                         location,
                         event_type,
+                        event_level,
                         registration_close_date,
                         is_registration_open,
                         temporary_registration_closes_at
@@ -387,6 +392,11 @@ export default async function DashboardPage() {
                                                             {event.event_type}
                                                         </Badge>
                                                     ) : null}
+                                                        {event.event_level ? (
+                                                            <Badge className="px-1.5 py-0 text-[10px]" variant="outline">
+                                                                {formatEventLevelLabel(event.event_level)}
+                                                            </Badge>
+                                                        ) : null}
                                                 </div>
                                                 <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
                                                     <span>{formatDateRangeStable(event.start_date, event.end_date)}</span>
@@ -438,11 +448,9 @@ export default async function DashboardPage() {
                         </div>
 
                         <div className="dashboard-surface">
-                            {/* @ts-ignore */}
                             {approvedEvents.length > 0 ? (
                                 <div className="dashboard-list">
-                                    {/* @ts-ignore */}
-                                    {approvedEvents.map((event: any) => (
+                                    {approvedEvents.map((event) => (
                                         <Link
                                             key={event.id}
                                             href={`/dashboard/entries/${event.id}`}
@@ -456,6 +464,9 @@ export default async function DashboardPage() {
                                                     <div className="flex items-center gap-2">
                                                         <span className="text-sm font-medium truncate">{event.title}</span>
                                                         <Badge className="capitalize text-[10px] px-1.5 py-0" variant="secondary">{event.event_type}</Badge>
+                                                        {event.event_level ? (
+                                                            <Badge className="text-[10px] px-1.5 py-0" variant="outline">{formatEventLevelLabel(event.event_level)}</Badge>
+                                                        ) : null}
                                                         <span className="text-[10px] text-emerald-600 dark:text-emerald-500 font-medium">Approved</span>
                                                     </div>
                                                     <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
