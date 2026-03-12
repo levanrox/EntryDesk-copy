@@ -1,5 +1,6 @@
 import { requireRole } from '@/lib/auth/require-role'
 import { notFound } from 'next/navigation'
+import { formatEventLevelLabel } from '@/lib/events/level'
 
 export default async function EventLayout({
     children,
@@ -25,8 +26,6 @@ export default async function EventLayout({
 
     if (!event) notFound()
 
-    const canDelete = event.organizer_id === user.id
-
     return (
         <div className="space-y-6">
             <div className="flex items-start justify-between gap-4">
@@ -35,6 +34,7 @@ export default async function EventLayout({
                     <div className="flex text-sm text-muted-foreground gap-4">
                         <span>{new Date(event.start_date).toLocaleDateString()}</span>
                         <span className="capitalize">{event.event_type}</span>
+                        {event.event_level ? <span>{formatEventLevelLabel(event.event_level)}</span> : null}
                     </div>
                 </div>
             </div>

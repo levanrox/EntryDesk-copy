@@ -20,17 +20,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-import { format } from "date-fns"
-import { CalendarIcon } from "lucide-react"
 import { createEvent } from '@/app/dashboard/events/actions'
 import { Checkbox } from "@/components/ui/checkbox"
+import { EVENT_LEVEL_OPTIONS } from '@/lib/events/level'
 
 export function CreateEventDialog() {
     const [open, setOpen] = useState(false)
-    const [date, setDate] = useState<{ from: Date; to: Date } | undefined>()
     const [isSubmitting, setIsSubmitting] = useState(false)
     const submitLockRef = useRef(false)
 
@@ -51,7 +46,7 @@ export function CreateEventDialog() {
                 return
             }
             setOpen(false)
-        } catch (error) {
+        } catch {
             alert('Failed to create event')
         } finally {
             submitLockRef.current = false
@@ -68,7 +63,7 @@ export function CreateEventDialog() {
                 <DialogHeader>
                     <DialogTitle>Create New Event</DialogTitle>
                     <DialogDescription>
-                        Set up a new tournament, seminar, or test.
+                        Set up a new event and assign its competition level.
                     </DialogDescription>
                 </DialogHeader>
                 <form action={handleSubmit}>
@@ -88,6 +83,21 @@ export function CreateEventDialog() {
                                         <SelectItem value="tournament">Tournament</SelectItem>
                                         <SelectItem value="seminar">Seminar</SelectItem>
                                         <SelectItem value="test">Black Belt Test</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="event_level" className="text-right">Level</Label>
+                            <div className="col-span-3">
+                                <Select name="event_level" required>
+                                    <SelectTrigger id="event_level">
+                                        <SelectValue placeholder="Select Level" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {EVENT_LEVEL_OPTIONS.map((option) => (
+                                            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>

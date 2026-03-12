@@ -16,6 +16,7 @@ import {
 import { formatDateRangeStable } from '@/lib/date'
 import { RegistrationDeadline } from '@/components/events/registration-deadline'
 import { isRegistrationClosed } from '@/lib/events/registration'
+import { formatEventLevelLabel } from '@/lib/events/level'
 
 type CoachActiveEvent = {
     id: string
@@ -24,6 +25,7 @@ type CoachActiveEvent = {
     end_date: string
     location: string | null
     event_type: string | null
+    event_level?: string | null
     description?: string | null
     registration_close_date?: string | null
     is_registration_open?: boolean | null
@@ -52,6 +54,11 @@ export function CoachActiveEventsCards({
                                     <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/20 hover:bg-primary/10">
                                         {event.event_type}
                                     </Badge>
+                                    {event.event_level ? (
+                                        <Badge variant="outline" className="border-border/60 bg-transparent">
+                                            {formatEventLevelLabel(event.event_level)}
+                                        </Badge>
+                                    ) : null}
                                 </div>
                                 {status && (
                                     <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-background border border-border text-[10px] font-medium shadow-sm">
@@ -118,7 +125,9 @@ export function CoachActiveEventsCards({
                         <>
                             <DialogHeader>
                                 <DialogTitle className="pr-8 text-3xl font-bold tracking-tight">{selectedEvent.title}</DialogTitle>
-                                <DialogDescription className="text-sm">{formatEventTypeLabel(selectedEvent.event_type)}</DialogDescription>
+                                <DialogDescription className="text-sm">
+                                    {formatEventMeta(selectedEvent.event_type, selectedEvent.event_level)}
+                                </DialogDescription>
                             </DialogHeader>
 
                             <div className="space-y-3 border border-border/50 p-4 text-sm rounded-lg">
@@ -179,4 +188,11 @@ function formatEventTypeLabel(eventType: string | null) {
     }
 
     return normalized.replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+function formatEventMeta(eventType: string | null, eventLevel?: string | null) {
+    const typeLabel = formatEventTypeLabel(eventType)
+    const levelLabel = formatEventLevelLabel(eventLevel)
+
+    return levelLabel ? `${typeLabel} • ${levelLabel}` : typeLabel
 }

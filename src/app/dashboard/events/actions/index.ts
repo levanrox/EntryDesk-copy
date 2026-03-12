@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/require-role'
 import { addDays, format, subMinutes } from 'date-fns'
+import { isEventLevel } from '@/lib/events/level'
 
 type SupabaseActionError = {
   code?: string
@@ -26,6 +27,7 @@ export async function createEvent(formData: FormData) {
   const title = (formData.get('title') as string)?.trim()
   const description = formData.get('description') as string
   const event_type = formData.get('event_type') as 'tournament' | 'seminar' | 'test'
+  const event_level_raw = (formData.get('event_level') as string | null)?.trim() || ''
   const location = (formData.get('location') as string)?.trim()
   const start_date = formData.get('start_date') as string // YYYY-MM-DD
   const end_date = formData.get('end_date') as string // YYYY-MM-DD
@@ -33,9 +35,15 @@ export async function createEvent(formData: FormData) {
   const registration_close_date = registration_close_date_raw || null
   const is_public = formData.get('is_public') === 'on'
 
-  if (!title || !event_type || !start_date || !end_date) {
+  if (!title || !event_type || !event_level_raw || !start_date || !end_date) {
     return { success: false, error: 'Please fill in all required fields.' }
   }
+
+  if (!isEventLevel(event_level_raw)) {
+    return { success: false, error: 'Please choose a valid event level.' }
+  }
+
+  const event_level = event_level_raw
 
   if (start_date > end_date) {
     return { success: false, error: 'Event start date must be on or before end date.' }
@@ -52,6 +60,7 @@ export async function createEvent(formData: FormData) {
     .eq('organizer_id', user.id)
     .eq('title', title)
     .eq('event_type', event_type)
+    .eq('event_level', event_level)
     .eq('start_date', start_date)
     .eq('end_date', end_date)
     .gte('created_at', dedupeWindowStart)
@@ -79,6 +88,7 @@ export async function createEvent(formData: FormData) {
     title,
     description,
     event_type,
+    event_level,
     location,
     start_date,
     end_date,
@@ -118,6 +128,7 @@ export async function createEvent(formData: FormData) {
         .eq('organizer_id', user.id)
         .eq('title', title)
         .eq('event_type', event_type)
+        .eq('event_level', event_level)
         .eq('start_date', start_date)
         .eq('end_date', end_date)
         .order('created_at', { ascending: false })

@@ -6,6 +6,8 @@ create type user_role as enum ('organizer', 'coach', 'admin');
 
 create type event_type as enum ('tournament', 'seminar', 'test');
 
+create type event_level as enum ('district', 'state', 'national', 'international');
+
 create type entry_status as enum ('draft', 'submitted', 'approved', 'rejected');
 
 -- Profiles (extends Supabase Auth)
@@ -51,6 +53,7 @@ create table events (
     title text not null,
     description text,
     event_type event_type not null,
+    event_level event_level,
     start_date date not null,
     end_date date not null,
     location text,

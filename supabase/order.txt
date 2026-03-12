@@ -5,3 +5,4 @@ prevent_duplicate_events.sql
 registration open close toggle.sql
 20260309_registration_close_date.sql
 20260310234831_temporary_registration.sql
+20260312_event_level.sql

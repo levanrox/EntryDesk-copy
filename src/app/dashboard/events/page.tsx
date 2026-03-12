@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Calendar, MapPin, ArrowRight, Globe, Lock } from 'lucide-react'
 import { PaginationControls } from '@/components/ui/pagination-controls'
 import { RegistrationDeadline } from '@/components/events/registration-deadline'
+import { formatEventLevelLabel } from '@/lib/events/level'
 
 export default async function EventsPage({
   searchParams,
@@ -56,6 +57,9 @@ export default async function EventsPage({
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-medium truncate">{event.title}</span>
                       <Badge className="capitalize text-[10px] px-1.5 py-0" variant="secondary">{event.event_type}</Badge>
+                      {event.event_level ? (
+                        <Badge className="text-[10px] px-1.5 py-0" variant="outline">{formatEventLevelLabel(event.event_level)}</Badge>
+                      ) : null}
                       {event.is_public ? (
                         <span className="flex items-center gap-0.5 text-[10px] text-emerald-600 dark:text-emerald-500">
                           <Globe className="h-2.5 w-2.5" /> Public
@@ -120,6 +124,9 @@ export default async function EventsPage({
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium truncate">{event.title}</span>
                         <Badge className="capitalize text-[10px] px-1.5 py-0" variant="secondary">{event.event_type}</Badge>
+                        {event.event_level ? (
+                          <Badge className="text-[10px] px-1.5 py-0" variant="outline">{formatEventLevelLabel(event.event_level)}</Badge>
+                        ) : null}
                       </div>
                       <div className="mt-0.5 flex items-center gap-2 text-[11px] text-muted-foreground">
                         <span>{new Date(event.start_date).toLocaleDateString()} – {new Date(event.end_date).toLocaleDateString()}</span>
